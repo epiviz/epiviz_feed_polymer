@@ -1,0 +1,105 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import"
+      href="bower_components/promise-polyfill/promise-polyfill-lite.html">
+<link rel="import" href="bower_components/iron-list/iron-list.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<dom-module id="epiviz-feed">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+
+            iron-list {
+                height: 100vh; /* don't use % values unless the parent element is sized. */
+            }
+
+            .pane.feed-pane {
+                width: 600px;
+                padding: 20px;
+                flex-shrink: 0;
+            }
+
+            .pane.feed-pane h2 {
+                color: #38425D;
+                font-size: 16px;
+                line-height: 20px;
+                font-weight: 700;
+                margin: 0 0 10px;
+                display: block;
+                -webkit-margin-before: 0.83em;
+                -webkit-margin-after: 0.83em;
+                -webkit-margin-start: 0;
+                -webkit-margin-end: 0;
+            }
+
+            .pane.feed-pane h3 {
+                font-size: 14px;
+                display: block;
+                -webkit-margin-before: 0em;
+                -webkit-margin-after: 0em;
+                -webkit-margin-start: 0px;
+                -webkit-margin-end: 0px;
+                font-weight: 400;
+            }
+
+            .open-sans-font {
+                font-family: 'Open Sans', sans-serif;
+            }
+
+            /*.scroll-y {*/
+            /*overflow-y: scroll;*/
+            /*}*/
+
+            .feed-header {
+
+            }
+
+            .feed-content {
+                font-size: 12px;
+                line-height: 18px;
+            }
+
+            .feed-element-container {
+                border-style: groove;
+            }
+        </style>
+        <iron-ajax id="requestResults"
+                   auto
+                   url="http://localhost:5001/chr=11&&start=3947953&end=7164951"
+                   params=''
+                   handle-as="json"
+                   on-response="handleResponse"
+                   debounce-duration="300">
+        </iron-ajax>
+        <div class="pane feed-pane">
+            <div class="feed-header open-sans-font">
+                <h2>Feed Views</h2>
+            </div>
+            <iron-list items="[[results]]" as="result">
+                <template>
+                    <div class="feed-content">
+                        <div class="feed-element-container">
+                            <h3>[[result]]</h3></div>
+                    </div>
+                </template>
+            </iron-list>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'epiviz-feed',
+            properties: {
+                results: {
+                    type: Array
+                }
+            },
+            ready: function () {
+                this.$.requestResults.generateRequest();
+            },
+            handleResponse: function (data) {
+                this.results = data.detail.response;
+            }
+        });
+    </script>
+</dom-module>
