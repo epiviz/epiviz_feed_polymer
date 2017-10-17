@@ -18,6 +18,8 @@
     "polymer": "Polymer/polymer#^1.9.3",
     "iron-list": "PolymerElements/iron-list#^2.0.8",
     "iron-ajax": "PolymerElements/iron-ajax#^2.0.5",
-    "promise-polyfill": "PolymerLabs/promise-polyfill#1"
+    "promise-polyfill": "PolymerLabs/promise-polyfill#1",
+    "epiviz-data-source": "epiviz/epiviz-data-source",
+    "epiviz-charts": "epiviz/epiviz-chart"
   }
 }

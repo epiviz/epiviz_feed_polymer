@@ -3,21 +3,40 @@
       href="bower_components/promise-polyfill/promise-polyfill-lite.html">
 <link rel="import" href="bower_components/iron-list/iron-list.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<link rel="import"
+      href="bower_components/epiviz-data-source/epiviz-data-source.html">
+
 <dom-module id="epiviz-feed">
     <template>
         <style>
             :host {
-                display: block;
+                display: inline-block;
             }
 
             iron-list {
-                height: 100vh; /* don't use % values unless the parent element is sized. */
+                height: 500px;
+                /* don't use % values unless the parent element is sized. */
+            }
+
+            .feed-pane-container {
+                /*float: right;*/
+                position: fixed;
+                z-index: 100;
+                right: 0;
+                background: #f0f8ff;
+                height: 600px;
             }
 
             .pane.feed-pane {
-                width: 600px;
+                width: 400px;
                 padding: 20px;
                 flex-shrink: 0;
+                /*position: absolute;*/
+                /*z-index: 10;*/
+            }
+
+            .pane.feed-pane:hover {
+                height: 100%;
             }
 
             .pane.feed-pane h2 {
@@ -47,10 +66,6 @@
                 font-family: 'Open Sans', sans-serif;
             }
 
-            /*.scroll-y {*/
-            /*overflow-y: scroll;*/
-            /*}*/
-
             .feed-header {
 
             }
@@ -58,10 +73,20 @@
             .feed-content {
                 font-size: 12px;
                 line-height: 18px;
+                cursor: pointer;
             }
 
             .feed-element-container {
                 border-style: groove;
+                cursor: pointer;
+            }
+
+            .feed-show-hide {
+                position: fixed;
+                right: 30px;
+                top: 20px;
+                font-size: 18px;
+                z-index: 1000;
             }
         </style>
         <iron-ajax id="requestResults"
@@ -72,19 +97,34 @@
                    on-response="handleResponse"
                    debounce-duration="300">
         </iron-ajax>
-        <div class="pane feed-pane">
-            <div class="feed-header open-sans-font">
-                <h2>Feed Views</h2>
+        <button id='show-hide-toggle' class="feed-show-hide"
+        on-click="showHideClick">Hide</button>
+        <div id="feed-container" class="feed-pane-container">
+            <div class="pane feed-pane">
+                <div class="feed-header open-sans-font">
+                    <h2>Feed Views</h2>
+                </div>
+                <iron-list items="[[results]]" as="result"
+                           selection-enabled=true selected-as="selectedItem"
+                           on-selected-item-changed="selectionChanged">
+                    <template>
+                        <!--<div class="feed-content">-->
+                        <div
+                                class="feed-element-container">
+
+                            <h3>[[result.description]]</h3>
+                        </div>
+                        <!--</div>-->
+                    </template>
+                </iron-list>
             </div>
-            <iron-list items="[[results]]" as="result">
-                <template>
-                    <div class="feed-content">
-                        <div class="feed-element-container">
-                            <h3>[[result]]</h3></div>
-                    </div>
-                </template>
-            </iron-list>
         </div>
+        <epiviz-environment id="epiviz_env"
+                            chr="chr11"
+                            start=3947953
+                            end=7164991>
+        </epiviz-environment>
+
     </template>
     <script>
         Polymer({
@@ -92,14 +132,102 @@
             properties: {
                 results: {
                     type: Array
+                },
+                selectedItem: {
+                    type: Object,
+                    notify: true
                 }
             },
+
             ready: function () {
                 this.$.requestResults.generateRequest();
+                this.notMethy = true;
             },
             handleResponse: function (data) {
                 this.results = data.detail.response;
+                getDescription(this.results);
+            },
+
+            selectionChanged: function (e, value) {
+//                console.log(e);
+                console.log(value);
+                if (value != null && value.value != null)
+                    this.clicked(value.value);
+            },
+            clicked: function (result) {
+                var test_measure = result['data-source'];
+                // methylation charts should be customized.
+                if ((result['data-type-one'] == 'methylation' &&
+                        result['data-type-two'] == 'expression' ) ||
+                        (result['data-type-one'] == 'expression' &&
+                        result['data-type-two'] == 'methylation')) {
+                    var dims = [result['data-type-one'] + '_' +
+                    result['attribute-one'],
+                        result['data-type-two'] + '_'
+                        + result['attribute-two']];
+//                    var key = ["exp_diff", "methy_diff"];
+                    var data = result['data'];
+//                    var element =
+//                            document.createElement('epiviz-json-scatter-plot');
+                    var customScatterPlot =
+                            "<epiviz-json-scatter-plot dim-s='" +
+                            JSON.stringify(dims) +
+//                            "' key='" +
+//                                    JSON.stringify(key) +
+                            "' data='" +
+                            JSON.stringify(data) +
+                            "'></epiviz-json-scatter-plot>";
+                    $("#epiviz_env").append(customScatterPlot);
+//                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
+
+                }
+                // two block data, add a block overlapping track
+                else if(result['data-type-one'] == 'block' &&
+                        result['data-type-two'] == 'block' ) {
+                    test_measure[0]['type'] = 'range';
+                    test_measure[1]['type'] = 'range';
+                    test_measure[0]['metadata'] = null;
+                    test_measure[1]['metadata'] = null;
+                    var block_element =
+                            document.createElement('epiviz-blocks-track');
+                    block_element.setAttribute('measurements',
+                            JSON.stringify(test_measure));
+                    block_element.className = 'charts';
+
+                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(block_element);
+                }
+                else {
+                    var element = document.createElement('epiviz-scatter-plot');
+                    element.setAttribute('measurements',
+                            JSON.stringify(test_measure));
+                    element.className = 'charts';
+
+                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
+                }
+            },
+            showHideClick: function() {
+                var element = document.getElementById('show-hide-toggle');
+                var feed_element = document.getElementById('feed-container');
+                if(element.textContent.trim() == "Hide") {
+                    element.textContent = "Show";
+                    feed_element.style.display = 'none';
+                } else {
+                    element.textContent = "Hide";
+                    feed_element.style.display = 'block';
+                }
             }
         });
+
+        function getDescription(results) {
+            results.forEach(function (result) {
+                result['description'] = result['computation-type'] +
+                        ' between ' + result['data-type-one'] + ' ' +
+                        result['attribute-one'] + ' and ' +
+                        result['data-type-two'] + ' ' +
+                        result['attribute-two'] + ' is ' +
+                        result['value'] + '.';
+            });
+        }
+
     </script>
 </dom-module>
