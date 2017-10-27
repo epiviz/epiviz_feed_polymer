@@ -3,8 +3,8 @@
       href="bower_components/promise-polyfill/promise-polyfill-lite.html">
 <link rel="import" href="bower_components/iron-list/iron-list.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
-<link rel="import"
-      href="bower_components/epiviz-data-source/epiviz-data-source.html">
+<link rel="import" href="bower_components/paper-search/paper-search-bar.html">
+<link rel="import" href="bower_components/paper-search/paper-search-panel.html">
 
 <dom-module id="epiviz-feed">
     <template>
@@ -98,13 +98,33 @@
                    debounce-duration="300">
         </iron-ajax>
         <button id='show-hide-toggle' class="feed-show-hide"
-        on-click="showHideClick">Hide</button>
+                on-click="showHideClick">Hide
+        </button>
         <div id="feed-container" class="feed-pane-container">
             <div class="pane feed-pane">
                 <div class="feed-header open-sans-font">
                     <h2>Feed Views</h2>
+                    <paper-search-panel
+                            search="{{searchString}}"
+                            count="5"
+                            items="{{results}}"
+                            has-more="[[hasMore]]"
+                            filters="null"
+                            selected-filters=""
+                            loading="[[loading]]"
+                            on-search="searchQuery"
+                            on-search-changed="searchQuery"
+                            >
+                        <!--<div>-->
+                        <!--Show your [[count]] results for "[[search]]"-->
+                        <!--</div>-->
+                    </paper-search-panel>
+                    <!--<paper-search-bar query="{{query}}"-->
+                    <!--placeholder="Enter search term"-->
+                    <!--nr-selected-filters="3"-->
+                    <!--on-paper-search-search="search"></paper-search-bar>-->
                 </div>
-                <iron-list items="[[results]]" as="result"
+                <iron-list items="[[filteredResults]]" as="result"
                            selection-enabled=true selected-as="selectedItem"
                            on-selected-item-changed="selectionChanged">
                     <template>
@@ -119,11 +139,11 @@
                 </iron-list>
             </div>
         </div>
-        <epiviz-environment id="epiviz_env"
-                            chr="chr11"
-                            start=3947953
-                            end=7164991>
-        </epiviz-environment>
+        <epiviz-navigation id="epiviz_env"
+                           chr="chr11"
+                           start=3947953
+                           end=7164991>
+        </epiviz-navigation>
 
     </template>
     <script>
@@ -133,9 +153,15 @@
                 results: {
                     type: Array
                 },
+                filteredResults: {
+                    type: Array
+                },
                 selectedItem: {
                     type: Object,
                     notify: true
+                },
+                searchString: {
+                    type: String
                 }
             },
 
@@ -145,7 +171,8 @@
             },
             handleResponse: function (data) {
                 this.results = data.detail.response;
-                if(this.results != null) {
+                this.filteredResults = this.results;
+                if (this.results != null) {
                     getDescription(this.results);
                 }
             },
@@ -179,13 +206,14 @@
                             "' data='" +
                             JSON.stringify(data) +
                             "'></epiviz-json-scatter-plot>";
+                    customScatterPlot.chartSettings.title = result['title'];
                     $("#epiviz_env").append(customScatterPlot);
 //                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
 
                 }
                 // two block data, add a block overlapping track
-                else if(result['data-type-one'] == 'block' &&
-                        result['data-type-two'] == 'block' ) {
+                else if (result['data-type-one'] == 'block' &&
+                        result['data-type-two'] == 'block') {
                     test_measure[0]['type'] = 'range';
                     test_measure[1]['type'] = 'range';
                     test_measure[0]['metadata'] = null;
@@ -194,6 +222,8 @@
                             document.createElement('epiviz-blocks-track');
                     block_element.setAttribute('measurements',
                             JSON.stringify(test_measure));
+                    block_element.chartSettings.title = result['title'];
+
                     block_element.className = 'charts';
 
                     Polymer.dom(document.querySelector("#epiviz_env")).appendChild(block_element);
@@ -202,32 +232,60 @@
                     var element = document.createElement('epiviz-scatter-plot');
                     element.setAttribute('measurements',
                             JSON.stringify(test_measure));
+                    element.chartSettings.title = result['title'];
                     element.className = 'charts';
 
                     Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
                 }
             },
-            showHideClick: function() {
+            showHideClick: function () {
                 var element = document.getElementById('show-hide-toggle');
                 var feed_element = document.getElementById('feed-container');
-                if(element.textContent.trim() == "Hide") {
+                if (element.textContent.trim() == "Hide") {
                     element.textContent = "Show";
                     feed_element.style.display = 'none';
                 } else {
                     element.textContent = "Hide";
                     feed_element.style.display = 'block';
                 }
+            },
+            searchQuery: function () {
+                console.log("search executed!");
+                if (this.searchString != undefined && this.searchString != null
+                        && this.searchString != "") {
+                    var query = this.searchString;
+                    var filtered = this.results.filter(function (result) {
+                        // Array.prototype.filter
+                        if (result['attribute-one'].includes(query) ||
+                                result['attribute-two'].includes(query) ||
+                                result['computation-type'].includes(query) ||
+                                result['data-type-one'].includes(query) ||
+                                result['data-type-two'].includes(query)) {
+                            return result;
+                        }
+                    });
+                     this.filteredResults = filtered;
+                } else {
+                    this.filteredResults = this.results;
+                }
             }
         });
 
         function getDescription(results) {
             results.forEach(function (result) {
+                // get description
                 result['description'] = result['computation-type'] +
                         ' between ' + result['data-type-one'] + ' ' +
                         result['attribute-one'] + ' and ' +
                         result['data-type-two'] + ' ' +
                         result['attribute-two'] + ' is ' +
-                        result['value'] + '.';
+                        result['value'].toFixed(2) + '.';
+                // get title
+                result['title'] = result['computation-type'] +
+                        ' between ' + result['data-type-one'] + ' ' +
+                        result['attribute-one'] + ' and ' +
+                        result['data-type-two'] + ' ' +
+                        result['attribute-two'];
             });
         }
 

@@ -20,6 +20,8 @@
     "iron-ajax": "PolymerElements/iron-ajax#^2.0.5",
     "promise-polyfill": "PolymerLabs/promise-polyfill#1",
     "epiviz-data-source": "epiviz/epiviz-data-source",
-    "epiviz-charts": "epiviz/epiviz-chart"
+    "epiviz-charts": "epiviz/epiviz-chart",
+    "iron-icons": "^2.0.1",
+    "paper-search": "1.2.3"
   }
 }
