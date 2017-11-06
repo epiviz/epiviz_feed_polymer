@@ -3,9 +3,12 @@
       href="bower_components/promise-polyfill/promise-polyfill-lite.html">
 <link rel="import" href="bower_components/iron-list/iron-list.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="bower_components/paper-search/paper-search-bar.html">
 <link rel="import" href="bower_components/paper-search/paper-search-panel.html">
-
+<link rel="import" href="bower_components/iron-collapse/iron-collapse.html">
+<link rel="import"
+      href="bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-listbox/paper-listbox.html">
 <dom-module id="epiviz-feed">
     <template>
         <style>
@@ -13,8 +16,24 @@
                 display: inline-block;
             }
 
+            .show-hide-button {
+                padding: 10px 15px;
+                background-color: #f3f3f3;
+                border: 1px solid #dedede;
+                border-radius: 5px;
+                font-size: 18px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+                text-align: left;
+            }
+
+            :host([opened]) #trigger {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+
             iron-list {
-                height: 500px;
+                max-height: 350px;
                 /* don't use % values unless the parent element is sized. */
             }
 
@@ -23,13 +42,13 @@
                 position: fixed;
                 z-index: 100;
                 right: 0;
-                background: #f0f8ff;
-                height: 600px;
+                background: #e6ecf0;
+                height: 100%;
             }
 
             .pane.feed-pane {
                 width: 400px;
-                padding: 20px;
+                padding: 5px;
                 flex-shrink: 0;
                 /*position: absolute;*/
                 /*z-index: 10;*/
@@ -59,11 +78,15 @@
                 -webkit-margin-after: 0em;
                 -webkit-margin-start: 0px;
                 -webkit-margin-end: 0px;
-                font-weight: 400;
+                font-weight: normal;
             }
 
             .open-sans-font {
                 font-family: 'Open Sans', sans-serif;
+            }
+
+            .arial-sans-font {
+                font-family: "Segoe UI", Arial, sans-serif;
             }
 
             .feed-header {
@@ -77,8 +100,11 @@
             }
 
             .feed-element-container {
-                border-style: groove;
+                background-color: #fff;
+                /*border-style: groove;*/
                 cursor: pointer;
+                border-bottom: 2px solid #e6ecf0;
+                padding: 3px;
             }
 
             .feed-show-hide {
@@ -86,7 +112,20 @@
                 right: 30px;
                 top: 20px;
                 font-size: 18px;
-                z-index: 1000;
+                z-index: 1100;
+            }
+
+            .grouped-list {
+                padding: 15px;
+                border: 1px solid #dedede;
+            }
+
+            .overflow-y {
+                overflow-y: scroll;
+            }
+
+            #feed-results {
+                max-height: 500px;
             }
         </style>
         <iron-ajax id="requestResults"
@@ -97,46 +136,71 @@
                    on-response="handleResponse"
                    debounce-duration="300">
         </iron-ajax>
-        <button id='show-hide-toggle' class="feed-show-hide"
+        <button id='show-hide-toggle' class="feed-show-hide show-hide-button"
                 on-click="showHideClick">Hide
         </button>
         <div id="feed-container" class="feed-pane-container">
             <div class="pane feed-pane">
-                <div class="feed-header open-sans-font">
-                    <h2>Feed Views</h2>
+                <div class="feed-header arial-sans-font">
+                    <h2>Feed Views
+                        <paper-dropdown-menu label="GroupBy">
+                            <paper-listbox class="dropdown-content"
+                                           selected="{{groupByMethod}}"
+                                           attr-for-selected="label"
+                                           on-selected-item-changed="groupByChanged">
+                                <paper-item label="All Types">All
+                                    Types</paper-item>
+                                <paper-item label="Tissue Type">Tissue
+                                    Type</paper-item>
+                                <paper-item
+                                        label="Computation Type">Computation Type</paper-item>
+                                <paper-item label="Data Type">Data
+                                    Type</paper-item>
+                            </paper-listbox>
+                        </paper-dropdown-menu>
+                    </h2>
                     <paper-search-panel
                             search="{{searchString}}"
                             count="5"
                             items="{{results}}"
-                            has-more="[[hasMore]]"
-                            filters="null"
-                            selected-filters=""
-                            loading="[[loading]]"
+                            hide-filter-button="True"
                             on-search="searchQuery"
-                            on-search-changed="searchQuery"
-                            >
-                        <!--<div>-->
-                        <!--Show your [[count]] results for "[[search]]"-->
-                        <!--</div>-->
+                            on-search-changed="searchQuery">
                     </paper-search-panel>
-                    <!--<paper-search-bar query="{{query}}"-->
-                    <!--placeholder="Enter search term"-->
-                    <!--nr-selected-filters="3"-->
-                    <!--on-paper-search-search="search"></paper-search-bar>-->
                 </div>
-                <iron-list items="[[filteredResults]]" as="result"
-                           selection-enabled=true selected-as="selectedItem"
-                           on-selected-item-changed="selectionChanged">
-                    <template>
-                        <!--<div class="feed-content">-->
-                        <div
-                                class="feed-element-container">
+                                <div id="feed-results" class="overflow-y">
 
-                            <h3>[[result.description]]</h3>
+                <template is="dom-repeat"
+                          items="{{filteredResultsByType}}">
+                    <button id="trigger trigger-[[item.type]]"
+                            class="show-hide-button"
+                            on-click="groupToggle"
+                            aria-expanded$="[[opened]]">
+                        [[item.type]]
+                    </button>
+                    <iron-collapse id="collapse-[[item.type]]"
+                                   opened="opened">
+                        <div class="grouped-list">
+                            <iron-list items="[[item.list]]" as="result"
+                                       selection-enabled=true
+                                       selected-as="selectedItem"
+                                       on-selected-item-changed="selectionChanged">
+                                <template>
+                                    <div class="feed-element-container">
+                                        <h3>[[result.description]]</h3>
+                                    </div>
+                                </template>
+                            </iron-list>
                         </div>
-                        <!--</div>-->
-                    </template>
-                </iron-list>
+                    </iron-collapse>
+                </template>
+                    </div>
+
+                <!--<simple-iron-collapse class="pane feed-pane arial-sans-font"-->
+                <!--filtered-results="{{filteredResults}}"-->
+                <!--opened="[[opened]]"-->
+                <!--search-string="[[searchString]]"></simple-iron-collapse>-->
+
             </div>
         </div>
         <epiviz-navigation id="epiviz_env"
@@ -154,31 +218,47 @@
                     type: Array
                 },
                 filteredResults: {
-                    type: Array
+                    type: Object,
+                    value: {},
+                    notify: true
+                },
+                filteredResultsByType: {
+                    type: Array,
+                    notify: true
                 },
                 selectedItem: {
                     type: Object,
                     notify: true
                 },
+                groupByMethod: {
+                    type: String,
+                    value: "All Types",
+                    notify: true
+                },
                 searchString: {
                     type: String
-                }
+                },
+                opened: {
+                    type: Boolean,
+                    reflectToAttribute: true
+                },
             },
 
             ready: function () {
-                this.$.requestResults.generateRequest();
+//                this.$.requestResults.generateRequest();
                 this.notMethy = true;
             },
             handleResponse: function (data) {
                 this.results = data.detail.response;
-                this.filteredResults = this.results;
                 if (this.results != null) {
+                    this.filteredResults = this._groupByResults(this.results,
+                            this.groupByMethod);
+                    this.filteredResultsByType =
+                            this._toTypeArray(this.filteredResults);
                     getDescription(this.results);
                 }
             },
-
             selectionChanged: function (e, value) {
-//                console.log(e);
                 console.log(value);
                 if (value != null && value.value != null)
                     this.clicked(value.value);
@@ -194,21 +274,15 @@
                     result['attribute-one'],
                         result['data-type-two'] + '_'
                         + result['attribute-two']];
-//                    var key = ["exp_diff", "methy_diff"];
                     var data = result['data'];
-//                    var element =
-//                            document.createElement('epiviz-json-scatter-plot');
                     var customScatterPlot =
                             "<epiviz-json-scatter-plot dim-s='" +
                             JSON.stringify(dims) +
-//                            "' key='" +
-//                                    JSON.stringify(key) +
                             "' data='" +
                             JSON.stringify(data) +
                             "'></epiviz-json-scatter-plot>";
                     customScatterPlot.chartSettings.title = result['title'];
                     $("#epiviz_env").append(customScatterPlot);
-//                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
 
                 }
                 // two block data, add a block overlapping track
@@ -264,11 +338,103 @@
                             return result;
                         }
                     });
-                     this.filteredResults = filtered;
-                } else {
-                    this.filteredResults = this.results;
+//                    this.filteredResults = {};
+//                    this.filteredResults["all"] = filtered;
+                    this.filteredResults = this._groupByResults(filtered,
+                            this.groupByMethod);
+                    this.filteredResultsByType = this._toTypeArray(this.filteredResults);
+                } else if (this.results != undefined) {
+                    this.filteredResults = this._groupByResults(this.results,
+                            this.groupByMethod);
+                    this.filteredResultsByType =
+                                this._toTypeArray(this.filteredResults);
                 }
+            },
+            groupByChanged: function (e) {
+                if(this.groupByMethod != undefined && this.results !=
+                        undefined) {
+                    var groupByType = this.groupByMethod;
+//                this.groupByMethod = groupByType;
+                    console.log(groupByType);
+                    if (groupByType == "All") {
+                        $("#trigger-All").style.visibility = 'hidden';
+                    }
+                    this.filteredResults = this._groupByResults(this.results,
+                            groupByType);
+                    this.filteredResultsByType =
+                            this._toTypeArray(this.filteredResults);
+                }
+            },
+            _groupByResults: function (resultsList, groupByType) {
+                switch (groupByType) {
+                    case "Computation Type":
+                        var groupedResults =
+                                resultsList.reduce(function (r, a) {
+                                    r[a["computation-type"]] =
+                                            r[a["computation-type"]] || [];
+                                    r[a["computation-type"]].push(a);
+                                    return r;
+                                }, Object.create(null));
+                        return groupedResults;
+                        break;
+//                    case "Tissue Type":
+//                        var groupedResults =
+//                                resultsList.reduce(function (r, a) {
+//                                    r[a["computation-type"]] =
+//                                            r[a["computation-type"]] || [];
+//                                    r[a["computation-type"]].push(a);
+//                                    return r;
+//                                }, Object.create(null));
+//                        this.filteredResults = groupedResults;
+//                        this.filteredResultsByType =
+//                                this._toTypeArray(this.filteredResults);
+//                        break;
+                    case "Data Type":
+                        var groupedResults =
+                                resultsList.reduce(function (r, a) {
+                                    var key_one = a["data-type-one"];
+                                    var key_two = a["data-type-two"];
+                                    r[key_one] =
+                                            r[key_one] || [];
+                                    r[key_two] = r[key_two] || [];
+                                    r[key_one].push(a);
+                                    r[key_two].push(a);
+                                    return r;
+                                }, Object.create(null));
+                        return groupedResults;
+                        break;
+                    case "All Types":
+                        if(resultsList.length == 0) {
+                            return [];
+                        }
+                        var groupedResults = {"all": resultsList};
+                        return groupedResults;
+                    default:
+                        // do nothing for now
+                }
+            },
+            groupToggle: function (e) {
+                $("#collapse-" + e.model.item.type).toggle();
+            },
+            _toTypeArray: function(resultsByType) {
+            if(resultsByType
+                    != undefined && Object.keys(resultsByType).length >
+                    0) {
+                return Object.keys(resultsByType).map(function (key) {
+                    if(resultsByType[key] == undefined
+                            || resultsByType[key].length == 0) {
+                        return;
+                    }
+                    return {
+                        type: key,
+                        list: resultsByType[key]
+                    };
+                });
+            } else {
+                return [];
             }
+        }
+
         });
 
         function getDescription(results) {
