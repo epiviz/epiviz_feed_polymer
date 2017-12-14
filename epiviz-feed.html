@@ -9,6 +9,8 @@
       href="bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="bower_components/paper-item/paper-item.html">
 <link rel="import" href="bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+
 <dom-module id="epiviz-feed">
     <template>
         <style>
@@ -17,16 +19,18 @@
             }
 
             .show-hide-button {
-                padding: 10px 15px;
+                padding: 10px;
                 background-color: #f3f3f3;
                 border: 1px solid #dedede;
                 border-radius: 5px;
-                font-size: 18px;
+                font-size: 16px;
                 cursor: pointer;
                 -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-                text-align: left;
+                text-align: center;
                 display: block;
             }
+
+
 
             :host([opened]) #trigger {
                 border-bottom-left-radius: 0;
@@ -66,8 +70,8 @@
                 font-weight: 700;
                 margin: 0 0 10px;
                 display: block;
-                -webkit-margin-before: 0.83em;
-                -webkit-margin-after: 0.83em;
+                /*-webkit-margin-before: 0.83em;*/
+                /*-webkit-margin-after: 0.83em;*/
                 -webkit-margin-start: 0;
                 -webkit-margin-end: 0;
             }
@@ -110,15 +114,18 @@
 
             .feed-show-hide {
                 position: fixed;
-                right: 30px;
-                top: 20px;
-                font-size: 18px;
+                right: 10px;
+                top: 10px;
                 z-index: 1100;
             }
 
             .grouped-list {
                 padding: 15px;
                 border: 1px solid #dedede;
+            }
+
+            .group-dropdown-menu {
+                max-width: 160px;
             }
 
             .overflow-y {
@@ -137,14 +144,21 @@
                    on-response="handleResponse"
                    debounce-duration="300">
         </iron-ajax>
-        <button id='show-hide-toggle' class="feed-show-hide show-hide-button"
-                on-click="showHideClick">Hide
-        </button>
+        <!--<button icon= "editor" id='show-hide-toggle'-->
+                <!--class="feed-show-hide show-hide-button"-->
+                <!--on-click="showHideClick">Hide-->
+        <!--</button>-->
+        <paper-button raised id='show-hide-toggle'
+                      class="feed-show-hide show-hide-button"
+                      on-click="showHideClick">Hide
+        </paper-button>
         <div id="feed-container" class="feed-pane-container">
             <div class="pane feed-pane">
                 <div class="feed-header arial-sans-font">
-                    <h2>Feed Views
-                        <paper-dropdown-menu label="GroupBy">
+                    <h2><iron-icon icon="icons:trending-up"></iron-icon>
+                        Feed Results
+                        <paper-dropdown-menu class="group-dropdown-menu"
+                                             label="GroupBy">
                             <paper-listbox class="dropdown-content"
                                            selected="{{groupByMethod}}"
                                            attr-for-selected="label"
@@ -173,12 +187,13 @@
 
                 <template is="dom-repeat"
                           items="{{filteredResultsByType}}">
-                    <button id="trigger trigger-[[item.type]]"
+                    <paper-button id="trigger trigger-[[item.type]]"
                             class="show-hide-button"
                             on-click="groupToggle"
                             aria-expanded$="[[opened]]">
+                        <iron-icon icon="icons:menu"></iron-icon>
                         [[item.type]]
-                    </button>
+                    </paper-button>
                     <iron-collapse id="collapse-[[item.type]]"
                                    opened="opened">
                         <div class="grouped-list">
@@ -188,7 +203,15 @@
                                        on-selected-item-changed="selectionChanged">
                                 <template>
                                     <div class="feed-element-container">
-                                        <h3>[[result.description]]</h3>
+                                        <!--<h3>[[result.description]]</h3>-->
+                                        <h3>The [[result.computation-type]]
+                                            between [[result.data-type-one]]
+                                            <i>[[result.attribute-one]]</i> and
+                                            [[result.data-type-two]]
+                                            <i>[[result.attribute-two]]</i> is
+                                            <b>[[result.value]]</b>. The
+                                            p-value is <i>[[result.pvalue]]</i>.
+                                        </h3>
                                     </div>
                                 </template>
                             </iron-list>
@@ -266,6 +289,18 @@
             },
             clicked: function (result) {
                 var test_measure = result['data-source'];
+
+                // check whether there is chart already in the main visualization.
+                if(result['plot-id'] != null &&
+                        document.getElementById(result['plot-id']) != null) {
+                    var elementToFocus =
+                            document.getElementById(result['plot-id']);
+                    elementToFocus.scrollIntoView();
+                    $(elementToFocus).effect("highlight", {color:
+                            '#e6ecf0b'}, 2000);
+                    return;
+                }
+
                 // methylation charts should be customized.
                 if ((result['data-type-one'] == 'methylation' &&
                         result['data-type-two'] == 'expression' ) ||
@@ -282,9 +317,13 @@
                             "' data='" +
                             JSON.stringify(data) +
                             "'></epiviz-json-scatter-plot>";
-                    customScatterPlot.chartSettings.title = result['title'];
-                    $("#epiviz_env").append(customScatterPlot);
+                    // record the plot-id to scroll to the right position when
+                    // click to add the chart, so do not create repeated charts
+//                    result['plot-id'] = element.getAttribute('plot-id');
 
+                    $("#epiviz_env").append(customScatterPlot);
+//                    epivizScatterPlot = customScatterPlot
+//                    customScatterPlot.chartSettings.title = result['title'];
                 }
                 // two block data, add a block overlapping track
                 else if (result['data-type-one'] == 'block' &&
@@ -301,7 +340,15 @@
 
                     block_element.className = 'charts';
 
+                    // record the plot-id to scroll to the right position when
+                    // click to add the chart, so do not create repeated charts
+                    result['plot-id'] = block_element.getAttribute('plot-id');
                     Polymer.dom(document.querySelector("#epiviz_env")).appendChild(block_element);
+                    var targetElement =
+                            document.getElementById(result['plot-id']);
+                    targetElement.scrollIntoView();
+                    $(targetElement).effect("highlight", {color:
+                            '#e6ecf0b'}, 2000);
                 }
                 else {
                     var element = document.createElement('epiviz-scatter-plot');
@@ -309,6 +356,10 @@
                             JSON.stringify(test_measure));
                     element.chartSettings.title = result['title'];
                     element.className = 'charts';
+
+                    // record the plot-id to scroll to the right position when
+                    // click to add the chart, so do not create repeated charts
+                    result['plot-id'] = element.getAttribute('plot-id');
 
                     Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
                 }
@@ -335,7 +386,8 @@
                                 result['attribute-two'].includes(query) ||
                                 result['computation-type'].includes(query) ||
                                 result['data-type-one'].includes(query) ||
-                                result['data-type-two'].includes(query)) {
+                                result['data-type-two'].includes(query) ||
+                                result['value'].toString().includes(query)) {
                             return result;
                         }
                     });
