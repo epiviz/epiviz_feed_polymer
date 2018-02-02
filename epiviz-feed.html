@@ -30,8 +30,6 @@
                 display: block;
             }
 
-
-
             :host([opened]) #trigger {
                 border-bottom-left-radius: 0;
                 border-bottom-right-radius: 0;
@@ -145,8 +143,8 @@
                    debounce-duration="300">
         </iron-ajax>
         <!--<button icon= "editor" id='show-hide-toggle'-->
-                <!--class="feed-show-hide show-hide-button"-->
-                <!--on-click="showHideClick">Hide-->
+        <!--class="feed-show-hide show-hide-button"-->
+        <!--on-click="showHideClick">Hide-->
         <!--</button>-->
         <paper-button raised id='show-hide-toggle'
                       class="feed-show-hide show-hide-button"
@@ -155,7 +153,8 @@
         <div id="feed-container" class="feed-pane-container">
             <div class="pane feed-pane">
                 <div class="feed-header arial-sans-font">
-                    <h2><iron-icon icon="icons:trending-up"></iron-icon>
+                    <h2>
+                        <iron-icon icon="icons:trending-up"></iron-icon>
                         Feed Results
                         <paper-dropdown-menu class="group-dropdown-menu"
                                              label="GroupBy">
@@ -164,13 +163,18 @@
                                            attr-for-selected="label"
                                            on-selected-item-changed="groupByChanged">
                                 <paper-item label="All Types">All
-                                    Types</paper-item>
+                                    Types
+                                </paper-item>
                                 <paper-item label="Tissue Type">Tissue
-                                    Type</paper-item>
+                                    Type
+                                </paper-item>
                                 <paper-item
-                                        label="Computation Type">Computation Type</paper-item>
+                                        label="Computation Type">Computation
+                                    Type
+                                </paper-item>
                                 <paper-item label="Data Type">Data
-                                    Type</paper-item>
+                                    Type
+                                </paper-item>
                             </paper-listbox>
                         </paper-dropdown-menu>
                     </h2>
@@ -183,42 +187,45 @@
                             on-search-changed="searchQuery">
                     </paper-search-panel>
                 </div>
-                                <div id="feed-results" class="overflow-y">
+                <div id="feed-results" class="overflow-y">
 
-                <template is="dom-repeat"
-                          items="{{filteredResultsByType}}">
-                    <paper-button id="trigger trigger-[[item.type]]"
-                            class="show-hide-button"
-                            on-click="groupToggle"
-                            aria-expanded$="[[opened]]">
-                        <iron-icon icon="icons:menu"></iron-icon>
-                        [[item.type]]
-                    </paper-button>
-                    <iron-collapse id="collapse-[[item.type]]"
-                                   opened="opened">
-                        <div class="grouped-list">
-                            <iron-list items="[[item.list]]" as="result"
-                                       selection-enabled=true
-                                       selected-as="selectedItem"
-                                       on-selected-item-changed="selectionChanged">
-                                <template>
-                                    <div class="feed-element-container">
-                                        <!--<h3>[[result.description]]</h3>-->
-                                        <h3>The [[result.computation-type]]
-                                            between [[result.data-type-one]]
-                                            <i>[[result.attribute-one]]</i> and
-                                            [[result.data-type-two]]
-                                            <i>[[result.attribute-two]]</i> is
-                                            <b>[[result.value]]</b>. The
-                                            p-value is <i>[[result.pvalue]]</i>.
-                                        </h3>
-                                    </div>
-                                </template>
-                            </iron-list>
-                        </div>
-                    </iron-collapse>
-                </template>
-                    </div>
+                    <template is="dom-repeat"
+                              items="{{filteredResultsByType}}">
+                        <paper-button id="trigger trigger-[[item.type]]"
+                                      class="show-hide-button"
+                                      on-click="groupToggle"
+                                      aria-expanded$="[[opened]]">
+                            <iron-icon icon="icons:menu"></iron-icon>
+                            [[item.type]]
+                        </paper-button>
+                        <iron-collapse id="collapse-[[item.type]]"
+                                       opened="opened">
+                            <div class="grouped-list">
+                                <iron-list items="[[item.list]]" as="result"
+                                           selection-enabled=true
+                                           selected-as="selectedItem"
+                                           on-selected-item-changed="selectionChanged">
+                                    <template>
+                                        <div class="feed-element-container">
+                                            <!--<h3>[[result.description]]</h3>-->
+                                            <h3>The [[result.computation-type]]
+                                                between [[result.data-type-one]]
+                                                <i>[[result.attribute-one]]</i>
+                                                and
+                                                [[result.data-type-two]]
+                                                <i>[[result.attribute-two]]</i>
+                                                is
+                                                <b>[[result.value]]</b>. The
+                                                p-value is
+                                                <i>[[result.pvalue]]</i>.
+                                            </h3>
+                                        </div>
+                                    </template>
+                                </iron-list>
+                            </div>
+                        </iron-collapse>
+                    </template>
+                </div>
 
                 <!--<simple-iron-collapse class="pane feed-pane arial-sans-font"-->
                 <!--filtered-results="{{filteredResults}}"-->
@@ -291,13 +298,14 @@
                 var test_measure = result['data-source'];
 
                 // check whether there is chart already in the main visualization.
-                if(result['plot-id'] != null &&
+                if (result['plot-id'] != null &&
                         document.getElementById(result['plot-id']) != null) {
                     var elementToFocus =
                             document.getElementById(result['plot-id']);
                     elementToFocus.scrollIntoView();
-                    $(elementToFocus).effect("highlight", {color:
-                            '#e6ecf0b'}, 2000);
+                    $(elementToFocus).effect("highlight", {
+                        color: '#e6ecf0b'
+                    }, 2000);
                     return;
                 }
 
@@ -311,17 +319,21 @@
                         result['data-type-two'] + '_'
                         + result['attribute-two']];
                     var data = result['data'];
+
+                    var elementId = this._generateId();
+
                     var customScatterPlot =
-                            "<epiviz-json-scatter-plot dim-s='" +
+                            "<epiviz-json-scatter-plot id=" + elementId +
+                            " dim-s='" +
                             JSON.stringify(dims) +
                             "' data='" +
                             JSON.stringify(data) +
                             "'></epiviz-json-scatter-plot>";
                     // record the plot-id to scroll to the right position when
                     // click to add the chart, so do not create repeated charts
-//                    result['plot-id'] = element.getAttribute('plot-id');
+                    result['plot-id'] = elementId;
 
-                    $("#epiviz_env").append(customScatterPlot);
+                    $("#navHeader").append(customScatterPlot);
 //                    epivizScatterPlot = customScatterPlot
 //                    customScatterPlot.chartSettings.title = result['title'];
                 }
@@ -344,11 +356,10 @@
                     // click to add the chart, so do not create repeated charts
                     result['plot-id'] = block_element.getAttribute('plot-id');
                     Polymer.dom(document.querySelector("#epiviz_env")).appendChild(block_element);
-                    var targetElement =
-                            document.getElementById(result['plot-id']);
-                    targetElement.scrollIntoView();
-                    $(targetElement).effect("highlight", {color:
-                            '#e6ecf0b'}, 2000);
+                    block_element.scrollIntoView();
+                    $(block_element).effect("highlight", {
+                        color: '#e6ecf0b'
+                    }, 2000);
                 }
                 else {
                     var element = document.createElement('epiviz-scatter-plot');
@@ -362,6 +373,10 @@
                     result['plot-id'] = element.getAttribute('plot-id');
 
                     Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
+                    element.scrollIntoView();
+                    $(element).effect("highlight", {
+                        color: '#e6ecf0b'
+                    }, 2000);
                 }
             },
             showHideClick: function () {
@@ -400,11 +415,11 @@
                     this.filteredResults = this._groupByResults(this.results,
                             this.groupByMethod);
                     this.filteredResultsByType =
-                                this._toTypeArray(this.filteredResults);
+                            this._toTypeArray(this.filteredResults);
                 }
             },
             groupByChanged: function (e) {
-                if(this.groupByMethod != undefined && this.results !=
+                if (this.groupByMethod != undefined && this.results !=
                         undefined) {
                     var groupByType = this.groupByMethod;
 //                this.groupByMethod = groupByType;
@@ -457,7 +472,7 @@
                         return groupedResults;
                         break;
                     case "All Types":
-                        if(resultsList.length == 0) {
+                        if (resultsList.length == 0) {
                             return [];
                         }
                         var groupedResults = {"all": resultsList};
@@ -469,24 +484,33 @@
             groupToggle: function (e) {
                 $("#collapse-" + e.model.item.type).toggle();
             },
-            _toTypeArray: function(resultsByType) {
-            if(resultsByType
-                    != undefined && Object.keys(resultsByType).length >
-                    0) {
-                return Object.keys(resultsByType).map(function (key) {
-                    if(resultsByType[key] == undefined
-                            || resultsByType[key].length == 0) {
-                        return;
-                    }
-                    return {
-                        type: key,
-                        list: resultsByType[key]
-                    };
-                });
-            } else {
-                return [];
+            _toTypeArray: function (resultsByType) {
+                if (resultsByType
+                        != undefined && Object.keys(resultsByType).length >
+                        0) {
+                    return Object.keys(resultsByType).map(function (key) {
+                        if (resultsByType[key] == undefined
+                                || resultsByType[key].length == 0) {
+                            return;
+                        }
+                        return {
+                            type: key,
+                            list: resultsByType[key]
+                        };
+                    });
+                } else {
+                    return [];
+                }
+            },
+            _generateId: function () {
+                var text = "";
+                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+                for (var i = 0; i < 3; i++)
+                    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+                return text;
             }
-        }
 
         });
 
