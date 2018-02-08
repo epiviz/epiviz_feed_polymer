@@ -114,7 +114,7 @@
                 position: fixed;
                 right: 10px;
                 top: 10px;
-                z-index: 1100;
+                z-index: 150;
             }
 
             .grouped-list {
@@ -135,8 +135,6 @@
             }
         </style>
         <iron-ajax id="requestResults"
-                   auto
-                   url="http://localhost:5001/chr=11&start=3947953&end=7164951"
                    params=''
                    handle-as="json"
                    on-response="handleResponse"
@@ -235,9 +233,12 @@
             </div>
         </div>
         <epiviz-navigation id="epiviz_env"
-                           chr="chr11"
-                           start=3947953
-                           end=7164991>
+                           chr="{{chr}}"
+                           start="{{start}}"
+                           end="{{end}}">
+            <!--<epiviz-json-scatter-plot class="charts" id="WLs"-->
+            <!--dim-s="[&quot;expression_lung___normal&quot;,&quot;methylation_thyroid&quot;]" data="[{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.031022222222222222},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0021166666666666656},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.0021166666666666656},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.022628571428571425},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.033350000000000005},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.027325000000000002},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.00726},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02318},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.011949999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.011949999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.011949999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02835909090909091},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.024399999999999998},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.02125},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.02125},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.02125},{&quot;expression_lung___normal&quot;:0.3333333333,&quot;methylation_thyroid&quot;:-0.0724},{&quot;expression_lung___normal&quot;:0.6666666667,&quot;methylation_thyroid&quot;:-0.0992},{&quot;expression_lung___normal&quot;:0.6666666667,&quot;methylation_thyroid&quot;:-0.0992},{&quot;expression_lung___normal&quot;:0.6666666667,&quot;methylation_thyroid&quot;:-0.0992},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.027016666666666665},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.055850000000000004},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.07255},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0666},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0666},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0343},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01235},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0652},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02615},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0036000000000000003},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01458},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0013000000000000002},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.04228333333333333},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01774},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01774},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.004960000000000001},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.004960000000000001},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.0101},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0021666666666666666},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0029000000000000002},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.021239999999999995},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.017089999999999998},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.037375},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.030516666666666664},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.030516666666666664},{&quot;expression_lung___normal&quot;:0.3333333333,&quot;methylation_thyroid&quot;:0.01052},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0038},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0038},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.010575},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0264},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0264},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.023725000000000003},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.024255555555555555},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.024255555555555555},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0021999999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0021999999999999997},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.009224999999999999},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.0011250000000000001},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.0011250000000000001},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.0064333333333333334},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0064333333333333334},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.02928666666666667},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.02928666666666667},{&quot;expression_lung___normal&quot;:0.3333333333,&quot;methylation_thyroid&quot;:-0.005625},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0006999999999999992},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.025333333333333333},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0065875000000000005},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.010366666666666668},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.010366666666666668},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02114285714285714},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.004633333333333332}]">-->
+            <!--</epiviz-json-scatter-plot>-->
         </epiviz-navigation>
 
     </template>
@@ -273,9 +274,43 @@
                     type: Boolean,
                     reflectToAttribute: true
                 },
+                chr: {
+                    type: String,
+                    value: "chr11",
+                    notify: true
+
+                },
+                start: {
+                    type: Number,
+                    value: 3947953,
+                    notify: true
+
+                },
+                end: {
+                    type: Number,
+                    value: 7164991,
+                    notify: true
+
+                }
+            },
+
+            observers: [
+                '_rangeChanged(chr, start, end)'
+            ],
+
+            _rangeChanged: function (chr, start, end) {
+                this.$.requestResults.url =
+                        "http://localhost:5001/chr=" + this.chr +
+                        "&start=" + this.start + "&end=" + this.end;
+
+                this.$.requestResults.generateRequest();
             },
 
             ready: function () {
+//                this.$.requestResults.url =
+//                        "http://localhost:5001/chr=" + this.chr +
+//                        "&start=" + this.start + "&end=" + this.end;
+//
 //                this.$.requestResults.generateRequest();
                 this.notMethy = true;
             },
@@ -323,7 +358,8 @@
                     var elementId = this._generateId();
 
                     var customScatterPlot =
-                            "<epiviz-json-scatter-plot id=" + elementId +
+                            "<epiviz-json-scatter-plot class='charts' id=" +
+                            elementId +
                             " dim-s='" +
                             JSON.stringify(dims) +
                             "' data='" +
@@ -348,14 +384,15 @@
                             document.createElement('epiviz-blocks-track');
                     block_element.setAttribute('measurements',
                             JSON.stringify(test_measure));
-                    block_element.chartSettings.title = result['title'];
 
                     block_element.className = 'charts';
 
                     // record the plot-id to scroll to the right position when
                     // click to add the chart, so do not create repeated charts
                     result['plot-id'] = block_element.getAttribute('plot-id');
-                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(block_element);
+                    Polymer.dom(document.getElementById("epiviz_env")).appendChild(block_element);
+                    block_element.chartSettings.title = result['title'];
+                    block_element.chartSettings.topMargin = 25;
                     block_element.scrollIntoView();
                     $(block_element).effect("highlight", {
                         color: '#e6ecf0b'
@@ -372,7 +409,7 @@
                     // click to add the chart, so do not create repeated charts
                     result['plot-id'] = element.getAttribute('plot-id');
 
-                    Polymer.dom(document.querySelector("#epiviz_env")).appendChild(element);
+                    Polymer.dom(document.getElementById("epiviz_env")).appendChild(element);
                     element.scrollIntoView();
                     $(element).effect("highlight", {
                         color: '#e6ecf0b'
