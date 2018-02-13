@@ -11,6 +11,9 @@
 <link rel="import" href="bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="bower_components/iron-icons/iron-icons.html">
 
+<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="bower_components/paper-spinner/paper-spinner-lite.html">
+
 <dom-module id="epiviz-feed">
     <template>
         <style>
@@ -110,6 +113,11 @@
                 padding: 3px;
             }
 
+            .feed-element-container.selected {
+              outline: 0;
+              background-color: #ddd;
+            }
+
             .feed-show-hide {
                 position: fixed;
                 right: 10px;
@@ -133,6 +141,16 @@
             #feed-results {
                 max-height: 500px;
             }
+
+            paper-spinner-lite {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%);
+                height:75px;
+                width: 75px;
+            }
+
         </style>
         <iron-ajax id="requestResults"
                    params=''
@@ -182,11 +200,16 @@
                             items="{{results}}"
                             hide-filter-button="True"
                             on-search="searchQuery"
+                            no-results-text=""
                             on-search-changed="searchQuery">
                     </paper-search-panel>
                 </div>
                 <div id="feed-results" class="overflow-y">
+                    <paper-spinner-lite active
+                                        class="blue"
+                                        hidden$="[[_hideSpinner]]">
 
+                    </paper-spinner-lite>
                     <template is="dom-repeat"
                               items="{{filteredResultsByType}}">
                         <paper-button id="trigger trigger-[[item.type]]"
@@ -201,11 +224,13 @@
                             <div class="grouped-list">
                                 <iron-list items="[[item.list]]" as="result"
                                            selection-enabled=true
-                                           selected-as="selectedItem"
+                                           selected-as="{{selectedItem}}"
+                                           selected-item="{{selectItem}}"
                                            on-selected-item-changed="selectionChanged">
                                     <template>
-                                        <div class="feed-element-container">
-                                            <!--<h3>[[result.description]]</h3>-->
+                                        <div
+                                                class$="[[_getIndexClass(result, selected)]]">
+                                        <div>
                                             <h3>The [[result.computation-type]]
                                                 between [[result.data-type-one]]
                                                 <i>[[result.attribute-one]]</i>
@@ -218,6 +243,7 @@
                                                 <i>[[result.pvalue]]</i>.
                                             </h3>
                                         </div>
+                                            </div>
                                     </template>
                                 </iron-list>
                             </div>
@@ -262,6 +288,10 @@
                     type: Object,
                     notify: true
                 },
+                selectItem: {
+                    type: Object,
+                    notify: true
+                },
                 groupByMethod: {
                     type: String,
                     value: "All Types",
@@ -278,19 +308,21 @@
                     type: String,
                     value: "chr11",
                     notify: true
-
                 },
                 start: {
                     type: Number,
                     value: 3947953,
                     notify: true
-
                 },
                 end: {
                     type: Number,
                     value: 7164991,
                     notify: true
-
+                },
+                _hideSpinner: {
+                    type: Boolean,
+                    value: false,
+                    notify: true
                 }
             },
 
@@ -299,6 +331,8 @@
             ],
 
             _rangeChanged: function (chr, start, end) {
+                this.filteredResultsByType = [];
+                this.set("_hideSpinner", false);
                 this.$.requestResults.url =
                         "http://localhost:5001/chr=" + this.chr +
                         "&start=" + this.start + "&end=" + this.end;
@@ -322,6 +356,7 @@
                     this.filteredResultsByType =
                             this._toTypeArray(this.filteredResults);
                     getDescription(this.results);
+                    this.set("_hideSpinner", true);
                 }
             },
             selectionChanged: function (e, value) {
@@ -501,9 +536,11 @@
                                     var key_two = a["data-type-two"];
                                     r[key_one] =
                                             r[key_one] || [];
-                                    r[key_two] = r[key_two] || [];
                                     r[key_one].push(a);
-                                    r[key_two].push(a);
+                                    if(key_one != key_two) {
+                                        r[key_two] = r[key_two] || [];
+                                        r[key_two].push(a);
+                                    }
                                     return r;
                                 }, Object.create(null));
                         return groupedResults;
@@ -547,8 +584,19 @@
                     text += possible.charAt(Math.floor(Math.random() * possible.length));
 
                 return text;
-            }
+            },
+            _getIndexClass: function(result, isSelected) {
+                var classes = 'feed-element-container';
+                var test_measure = result['data-source'];
 
+                // check whether there is chart already in the main visualization.
+                if ((result['plot-id'] != null &&
+                        document.getElementById(result['plot-id']) != null)
+                        || isSelected) {
+                    classes += ' selected';
+                }
+                return classes;
+            }
         });
 
         function getDescription(results) {
@@ -561,11 +609,14 @@
                         result['attribute-two'] + ' is ' +
                         result['value'].toFixed(2) + '.';
                 // get title
-                result['title'] = result['computation-type'] +
-                        ' between ' + result['data-type-one'] + ' ' +
-                        result['attribute-one'] + ' and ' +
-                        result['data-type-two'] + ' ' +
-                        result['attribute-two'];
+                result['title'] = result['computation-type'] + ' = ' +
+                        result['value'].toFixed(2) + ', p-value is ' +
+                        result['pvalue'].toFixed(2);
+//                result['title'] = result['computation-type'] +
+//                        ' between ' + result['data-type-one'] + ' ' +
+//                        result['attribute-one'] + ' and ' +
+//                        result['data-type-two'] + ' ' +
+//                        result['attribute-two'];
             });
         }
 
