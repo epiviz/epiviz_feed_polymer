@@ -1,7 +1,6 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import"
       href="bower_components/promise-polyfill/promise-polyfill-lite.html">
-<link rel="import" href="bower_components/iron-list/iron-list.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="bower_components/paper-search/paper-search-panel.html">
 <link rel="import" href="bower_components/iron-collapse/iron-collapse.html">
@@ -12,7 +11,10 @@
 <link rel="import" href="bower_components/iron-icons/iron-icons.html">
 
 <link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="bower_components/paper-spinner/paper-spinner-lite.html">
+<link rel="import"
+      href="bower_components/paper-spinner/paper-spinner-lite.html">
+
+<link rel="import" href="bower_components/paper-card/paper-card.html">
 
 <dom-module id="epiviz-feed">
     <template>
@@ -38,9 +40,10 @@
                 border-bottom-right-radius: 0;
             }
 
-            iron-list {
-                max-height: 350px;
-                /* don't use % values unless the parent element is sized. */
+            paper-card {
+                margin: 3px;
+                padding: 5px;
+                border-radius: 5px;
             }
 
             .feed-pane-container {
@@ -114,8 +117,8 @@
             }
 
             .feed-element-container.selected {
-              outline: 0;
-              background-color: #ddd;
+                outline: 0;
+                background-color: #ddd;
             }
 
             .feed-show-hide {
@@ -147,7 +150,7 @@
                 top: 50%;
                 left: 50%;
                 transform: translateX(-50%) translateY(-50%);
-                height:75px;
+                height: 75px;
                 width: 75px;
             }
 
@@ -222,30 +225,23 @@
                         <iron-collapse id="collapse-[[item.type]]"
                                        opened="opened">
                             <div class="grouped-list">
-                                <iron-list items="[[item.list]]" as="result"
-                                           selection-enabled=true
-                                           selected-as="{{selectedItem}}"
-                                           selected-item="{{selectItem}}"
-                                           on-selected-item-changed="selectionChanged">
-                                    <template>
-                                        <div
-                                                class$="[[_getIndexClass(result, selected)]]">
-                                        <div>
-                                            <h3>The [[result.computation-type]]
-                                                between [[result.data-type-one]]
-                                                <i>[[result.attribute-one]]</i>
-                                                and
-                                                [[result.data-type-two]]
-                                                <i>[[result.attribute-two]]</i>
-                                                is
-                                                <b>[[result.value]]</b>. The
-                                                p-value is
-                                                <i>[[result.pvalue]]</i>.
-                                            </h3>
-                                        </div>
-                                            </div>
-                                    </template>
-                                </iron-list>
+                                <template is="dom-repeat"
+                                          items="[[item.list]]">
+                                    <paper-card on-tap="itemTapped">
+                                        <h3>The [[item.computation-type]]
+                                            between [[item.data-type-one]]
+                                            <i>[[item.attribute-one]]</i>
+                                            and
+                                            [[item.data-type-two]]
+                                            <i>[[item.attribute-two]]</i>
+                                            is
+                                            <b>[[item.value]]</b>. The
+                                            p-value is
+                                            <i>[[item.pvalue]]</i>.
+                                        </h3>
+
+                                    </paper-card>
+                                </template>
                             </div>
                         </iron-collapse>
                     </template>
@@ -359,11 +355,11 @@
                     this.set("_hideSpinner", true);
                 }
             },
-            selectionChanged: function (e, value) {
-                console.log(value);
-                if (value != null && value.value != null)
-                    this.clicked(value.value);
+
+            itemTapped: function (e) {
+                this.clicked(e.model.item);
             },
+
             clicked: function (result) {
                 var test_measure = result['data-source'];
 
@@ -537,7 +533,7 @@
                                     r[key_one] =
                                             r[key_one] || [];
                                     r[key_one].push(a);
-                                    if(key_one != key_two) {
+                                    if (key_one != key_two) {
                                         r[key_two] = r[key_two] || [];
                                         r[key_two].push(a);
                                     }
@@ -585,7 +581,7 @@
 
                 return text;
             },
-            _getIndexClass: function(result, isSelected) {
+            _getIndexClass: function (result, isSelected) {
                 var classes = 'feed-element-container';
                 var test_measure = result['data-source'];
 
