@@ -16,6 +16,11 @@
 
 <link rel="import" href="bower_components/paper-card/paper-card.html">
 
+<link rel="import" href="bower_components/paper-card/paper-card.html">
+<link rel="import" href="bower_components/web-socket/web-socket.html">
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+
 <dom-module id="epiviz-feed">
     <template>
         <style>
@@ -156,12 +161,20 @@
             }
 
         </style>
-        <iron-ajax id="requestResults"
-                   params=''
-                   handle-as="json"
-                   on-response="handleResponse"
-                   debounce-duration="300">
-        </iron-ajax>
+        <!--<iron-ajax id="requestResults"-->
+                   <!--params=''-->
+                   <!--handle-as="json"-->
+                   <!--on-response="handleResponse"-->
+                   <!--debounce-duration="300">-->
+        <!--</iron-ajax>-->
+        <!--<web-socket id="requestResults"-->
+            <!--url="ws://127.0.0.1:5001"-->
+            <!--auto>-->
+            <!--&lt;!&ndash;on-open="subscribeSocket"&ndash;&gt;-->
+            <!--&lt;!&ndash;on-message="showMessage"&ndash;&gt;-->
+            <!--&lt;!&ndash;on-error="showError"&ndash;&gt;-->
+            <!--&lt;!&ndash;on-close="endSocket"&ndash;&gt;-->
+        <!--</web-socket>-->
         <!--<button icon= "editor" id='show-hide-toggle'-->
         <!--class="feed-show-hide show-hide-button"-->
         <!--on-click="showHideClick">Hide-->
@@ -328,15 +341,44 @@
             ],
 
             _rangeChanged: function (chr, start, end) {
-                this.filteredResultsByType = [];
-                this.set("_hideSpinner", false);
-                this.$.requestResults.url =
-                        "http://localhost:5001/chr=" + this.chr +
-                        "&start=" + this.start + "&end=" + this.end;
-
-                this.$.requestResults.generateRequest();
+//                this.filteredResultsByType = [];
+//                this.set("_hideSpinner", false);
+//                this.$.requestResults.url =
+//                        "ws://127.0.0.1:5001";
+//                this.$.requestResults.open();
+//                var msgToSend = {
+//                    start: this.start,
+//                    end: this.end,
+//                    chr: this.chr
+//                };
+////                + this.chr +
+////                        "&start=" + this.start + "&end=" + this.end;
+//
+//                this.$.requestResults.send(msgToSend);
             },
+            attached: function() {
+                var self = this;
+                this.socket =
+                        io.connect("http://localhost:5000/test");
 
+            // Event handler for new connections.
+            // The callback function is invoked when a connection with the
+            // server is established.
+            this.socket.on('connect', function() {
+                console.log('connection on!');
+                self.socket.emit('my_event', {data: 'I\'m connected!'});
+            });
+
+            // Event handler for server sent data.
+            // The callback function is invoked whenever the server emits data
+            // to the client. The data is then displayed in the "Received"
+            // section of the page.
+            this.socket.on('my_response', function(msg) {
+                console.log(msg);
+                console.log('response received!');
+            });
+
+            },
             ready: function () {
 //                this.$.requestResults.url =
 //                        "http://localhost:5001/chr=" + this.chr +

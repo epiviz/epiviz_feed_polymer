@@ -27,6 +27,7 @@
     "paper-dropdown-menu": "1.5.1",
     "epiviz-imports": "epiviz/epiviz-imports#epiviz-5",
     "paper-spinner": "^2.0.0",
-    "paper-card": "polymerelements/paper-card#1.1.6"
+    "paper-card": "polymerelements/paper-card#1.1.6",
+    "web-socket": "https://github.com/gerard-payne/web-socket.git#^1.0.1"
   }
 }
