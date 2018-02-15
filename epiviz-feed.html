@@ -21,6 +21,9 @@
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
 
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+
 <dom-module id="epiviz-feed">
     <template>
         <style>
@@ -283,7 +286,8 @@
             is: 'epiviz-feed',
             properties: {
                 results: {
-                    type: Array
+                    type: Array,
+                    value: []
                 },
                 filteredResults: {
                     type: Object,
@@ -329,6 +333,10 @@
                     value: 7164991,
                     notify: true
                 },
+                seqID: {
+                    type: Number,
+                    value: 0
+                },
                 _hideSpinner: {
                     type: Boolean,
                     value: false,
@@ -341,44 +349,48 @@
             ],
 
             _rangeChanged: function (chr, start, end) {
-//                this.filteredResultsByType = [];
-//                this.set("_hideSpinner", false);
-//                this.$.requestResults.url =
-//                        "ws://127.0.0.1:5001";
-//                this.$.requestResults.open();
-//                var msgToSend = {
-//                    start: this.start,
-//                    end: this.end,
-//                    chr: this.chr
-//                };
-////                + this.chr +
-////                        "&start=" + this.start + "&end=" + this.end;
-//
-//                this.$.requestResults.send(msgToSend);
-            },
-            attached: function() {
+                this.filteredResultsByType = [];
+                this.set("_hideSpinner", false);
+                var seqData = {
+                    start: this.start,
+                    end: this.end,
+                    chr: this.chr
+                };
+                var msgToSend = {
+                    seq: this.seqID,
+                    data: seqData
+                };
+                // increase the counter to deal with multiple requests
+                this.seqID += 1;
+
                 var self = this;
-                this.socket =
-                        io.connect("http://localhost:5000/test");
+                if(this.socket == null) {
+                    this.socket =
+                            io.connect("http://localhost:5001/getdata");
+                }
+                // Event handler for new connections.
+                // The callback function is invoked when a connection with the
+                // server is established.
+                this.socket.on('connect', function() {
+                    console.log('connection on!');
+                    self.socket.emit('get_data_event', msgToSend);
+                });
 
-            // Event handler for new connections.
-            // The callback function is invoked when a connection with the
-            // server is established.
-            this.socket.on('connect', function() {
-                console.log('connection on!');
-                self.socket.emit('my_event', {data: 'I\'m connected!'});
-            });
-
-            // Event handler for server sent data.
-            // The callback function is invoked whenever the server emits data
-            // to the client. The data is then displayed in the "Received"
-            // section of the page.
-            this.socket.on('my_response', function(msg) {
-                console.log(msg);
-                console.log('response received!');
-            });
+                // Event handler for server sent data.
+                // The callback function is invoked whenever the server emits data
+                // to the client. The data is then displayed in the "Received"
+                // section of the page.
+                this.socket.on('returned_results', function(feed_array) {
+                    // receive an array of json objects, each element will be
+                    // listed in the feed.
+                    setTimeout(function(){
+                        self.handleResponse(feed_array);
+                    }, 5000);
+                    console.log('response received!');
+                });
 
             },
+
             ready: function () {
 //                this.$.requestResults.url =
 //                        "http://localhost:5001/chr=" + this.chr +
@@ -388,8 +400,10 @@
                 this.notMethy = true;
             },
             handleResponse: function (data) {
-                this.results = data.detail.response;
+                this.results = this.results.concat(data);
                 if (this.results != null) {
+                    // polymer array override dirty checking
+                    this.filteredResults = [];
                     this.filteredResults = this._groupByResults(this.results,
                             this.groupByMethod);
                     this.filteredResultsByType =
