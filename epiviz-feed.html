@@ -423,10 +423,18 @@
                     // click to add the chart, so do not create repeated charts
                     result['plot-id'] = block_element.getAttribute('plot-id');
                     Polymer.dom(document.getElementById("epiviz_env")).appendChild(block_element);
-                    block_element.chartSettings.title = result['title'];
-                    block_element.chartSettings.topMargin = 25;
-                    block_element.scrollIntoView();
-                    $(block_element).effect("highlight", {
+
+                    var settings =
+                            JSON.parse(JSON.stringify(block_element.chartSettings));
+                    settings.title = result['title'];
+                    var domElem = Polymer.dom(document.getElementById("epiviz_env")).querySelector('[plot-id$="' +
+                                    result['plot-id'] +
+                                    '"]');
+
+                    domElem.setAttribute("chart-settings",
+                            JSON.stringify(settings));
+                    domElem.scrollIntoView();
+                    $(domElem).effect("highlight", {
                         color: '#e6ecf0b'
                     }, 2000);
                 }
