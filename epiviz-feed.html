@@ -170,14 +170,13 @@
                    <!--on-response="handleResponse"-->
                    <!--debounce-duration="300">-->
         <!--</iron-ajax>-->
-        <!--<web-socket id="requestResults"-->
-            <!--url="ws://127.0.0.1:5001"-->
-            <!--auto>-->
-            <!--&lt;!&ndash;on-open="subscribeSocket"&ndash;&gt;-->
-            <!--&lt;!&ndash;on-message="showMessage"&ndash;&gt;-->
-            <!--&lt;!&ndash;on-error="showError"&ndash;&gt;-->
-            <!--&lt;!&ndash;on-close="endSocket"&ndash;&gt;-->
-        <!--</web-socket>-->
+        <web-socket id="requestResults"
+            url="ws://localhost:5001/getdata"
+            on-message="handleResponse"
+            on-open="socketOpen">
+            <!--on-error="showError"-->
+            <!--on-close="endSocket"-->
+        </web-socket>
         <!--<button icon= "editor" id='show-hide-toggle'-->
         <!--class="feed-show-hide show-hide-button"-->
         <!--on-click="showHideClick">Hide-->
@@ -325,7 +324,7 @@
                 },
                 start: {
                     type: Number,
-                    value: 3947953,
+                    value: 3947153,
                     notify: true
                 },
                 end: {
@@ -334,6 +333,14 @@
                     notify: true
                 },
                 seqID: {
+                    type: Number,
+                    value: 0
+                },
+                webSocketReady: {
+                    type: Boolean,
+                    value: false
+                },
+                webSocketCounter: {
                     type: Number,
                     value: 0
                 },
@@ -356,39 +363,63 @@
                     end: this.end,
                     chr: this.chr
                 };
+
+                // increase the counter to deal with multiple requests
+                if(this.seqID == null) {
+                    this.seqID = 0;
+                } else {
+                    this.seqID += 1;
+                }
+
                 var msgToSend = {
                     seq: this.seqID,
                     data: seqData
                 };
-                // increase the counter to deal with multiple requests
-                this.seqID += 1;
 
-                var self = this;
-                if(this.socket == null) {
-                    this.socket =
-                            io.connect("http://localhost:5001/getdata");
+                // web sockets
+                if (this.webSocketReady) {
+                    this.$.requestResults.send(JSON.stringify(msgToSend));
+                } else {
+                    if (this.webSocketCounter == 0 || this.webSocketCounter
+                            == undefined) {
+                        this.$.requestResults.open();
+                        this.webSocketCounter = 0;
+                    }
+                    this.webSocketCounter += 1;
                 }
-                // Event handler for new connections.
-                // The callback function is invoked when a connection with the
-                // server is established.
-                this.socket.on('connect', function() {
-                    console.log('connection on!');
-                    self.socket.emit('get_data_event', msgToSend);
-                });
 
-                // Event handler for server sent data.
-                // The callback function is invoked whenever the server emits data
-                // to the client. The data is then displayed in the "Received"
-                // section of the page.
-                this.socket.on('returned_results', function(feed_array) {
-                    // receive an array of json objects, each element will be
-                    // listed in the feed.
-                    setTimeout(function(){
-                        self.handleResponse(feed_array);
-                    }, 5000);
-                    console.log('response received!');
-                });
 
+//                var self = this;
+//                if(this.socket == null) {
+//                    this.socket =
+//                            io.connect("http://localhost:5001/getdata");
+//                }
+//                // Event handler for new connections.
+//                // The callback function is invoked when a connection with the
+//                // server is established.
+//                this.socket.on('connect', function() {
+//                    console.log('connection on!');
+//                    self.socket.emit('get_data_event', msgToSend);
+//                });
+//
+//                // Event handler for server sent data.
+//                // The callback function is invoked whenever the server emits data
+//                // to the client. The data is then displayed in the "Received"
+//                // section of the page.
+//                this.socket.on('returned_results', function(feed_array) {
+//                    // receive an array of json objects, each element will be
+//                    // listed in the feed.
+//                    setTimeout(function(){
+//                    self.handleResponse(feed_array);
+//                    }, 60000);
+//                    console.log('response received!');
+//                });
+
+            },
+
+            socketOpen: function() {
+                this.webSocketReady = true;
+                this._rangeChanged();
             },
 
             ready: function () {
@@ -399,15 +430,26 @@
 //                this.$.requestResults.generateRequest();
                 this.notMethy = true;
             },
-            handleResponse: function (data) {
+            handleResponse: function (event) {
+                var data = JSON.parse(event.detail);
+                if(data == this.seqID) {
+                    this.webSocketReady = false;
+                    this.$.requestResults.close();
+                    this.webSocketCounter -= 1;
+                    return;
+                }
                 this.results = this.results.concat(data);
                 if (this.results != null) {
                     // polymer array override dirty checking
-                    this.filteredResults = [];
+//                    this.filteredResults = [];
                     this.filteredResults = this._groupByResults(this.results,
                             this.groupByMethod);
                     this.filteredResultsByType =
                             this._toTypeArray(this.filteredResults);
+                    this.set("filteredResultsByType", []);
+                    this.set("filteredResultsByType", this._toTypeArray(this.filteredResults));
+
+                    this.notifyPath('filteredResultsByType');
                     getDescription(this.results);
                     this.set("_hideSpinner", true);
                 }
