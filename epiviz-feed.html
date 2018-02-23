@@ -16,13 +16,13 @@
 
 <link rel="import" href="bower_components/paper-card/paper-card.html">
 
-<link rel="import" href="bower_components/paper-card/paper-card.html">
 <link rel="import" href="bower_components/web-socket/web-socket.html">
 
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+<link rel="import"
+      href="bower_components/app-layout/app-drawer/app-drawer.html">
 
-
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+<link rel="import"
+      href="bower_components/paper-icon-button/paper-icon-button.html">
 
 <dom-module id="epiviz-feed">
     <template>
@@ -60,6 +60,7 @@
                 position: fixed;
                 z-index: 100;
                 right: 0;
+                text-align: initial;
                 background: #e6ecf0;
                 height: 100%;
             }
@@ -154,6 +155,32 @@
                 max-height: 500px;
             }
 
+            app-drawer {
+                --app-drawer-scrim-background: white;
+                --app-drawer-content-container: {
+                  background-color: #B0BEC5;
+                }
+            }
+
+            app-header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 212px;
+                /*color: #dddddd;*/
+                --app-header-background-front-layer: {
+                  background-color: red;
+                };
+                --app-header-background-rear-layer: {
+                  background-color: blue;
+                };
+            }
+
+            app-toolbar {
+                height: 100px;
+            }
+
             paper-spinner-lite {
                 position: absolute;
                 top: 50%;
@@ -164,12 +191,6 @@
             }
 
         </style>
-        <!--<iron-ajax id="requestResults"-->
-                   <!--params=''-->
-                   <!--handle-as="json"-->
-                   <!--on-response="handleResponse"-->
-                   <!--debounce-duration="300">-->
-        <!--</iron-ajax>-->
         <web-socket id="requestResults"
             url="ws://localhost:5001/getdata"
             on-message="handleResponse"
@@ -177,14 +198,24 @@
             <!--on-error="showError"-->
             <!--on-close="endSocket"-->
         </web-socket>
-        <!--<button icon= "editor" id='show-hide-toggle'-->
-        <!--class="feed-show-hide show-hide-button"-->
-        <!--on-click="showHideClick">Hide-->
-        <!--</button>-->
-        <paper-button raised id='show-hide-toggle'
-                      class="feed-show-hide show-hide-button"
-                      on-click="showHideClick">Hide
-        </paper-button>
+        <!--<paper-button raised id='show-hide-toggle'-->
+                      <!--class="feed-show-hide show-hide-button"-->
+                      <!--on-click="showHideClick">Hide-->
+        <!--</paper-button>-->
+        <app-header condenses reveals effects="waterfall resize-title blend-background parallax-background">
+    <app-toolbar>
+      <h4 condensed-title>Epiviz Compute</h4>
+      <paper-icon-button icon="menu"
+                           id="show-hide-toggle"
+                           class="feed-show-hide show-hide-button"
+                           on-click="showHideClick"></paper-icon-button>
+    </app-toolbar>
+    <!--<app-toolbar class="tall">-->
+      <!--<h1 main-title>What is material?</h1>-->
+    <!--</app-toolbar>-->
+  </app-header>
+
+        <app-drawer id="drawer" align="right" swipe-open>
         <div id="feed-container" class="feed-pane-container">
             <div class="pane feed-pane">
                 <div class="feed-header arial-sans-font">
@@ -270,6 +301,7 @@
 
             </div>
         </div>
+            </app-drawer>
         <epiviz-navigation id="epiviz_env"
                            chr="{{chr}}"
                            start="{{start}}"
@@ -387,34 +419,6 @@
                     }
                     this.webSocketCounter += 1;
                 }
-
-
-//                var self = this;
-//                if(this.socket == null) {
-//                    this.socket =
-//                            io.connect("http://localhost:5001/getdata");
-//                }
-//                // Event handler for new connections.
-//                // The callback function is invoked when a connection with the
-//                // server is established.
-//                this.socket.on('connect', function() {
-//                    console.log('connection on!');
-//                    self.socket.emit('get_data_event', msgToSend);
-//                });
-//
-//                // Event handler for server sent data.
-//                // The callback function is invoked whenever the server emits data
-//                // to the client. The data is then displayed in the "Received"
-//                // section of the page.
-//                this.socket.on('returned_results', function(feed_array) {
-//                    // receive an array of json objects, each element will be
-//                    // listed in the feed.
-//                    setTimeout(function(){
-//                    self.handleResponse(feed_array);
-//                    }, 60000);
-//                    console.log('response received!');
-//                });
-
             },
 
             socketOpen: function() {
@@ -423,11 +427,6 @@
             },
 
             ready: function () {
-//                this.$.requestResults.url =
-//                        "http://localhost:5001/chr=" + this.chr +
-//                        "&start=" + this.start + "&end=" + this.end;
-//
-//                this.$.requestResults.generateRequest();
                 this.notMethy = true;
             },
             handleResponse: function (event) {
@@ -441,7 +440,6 @@
                 this.results = this.results.concat(data);
                 if (this.results != null) {
                     // polymer array override dirty checking
-//                    this.filteredResults = [];
                     this.filteredResults = this._groupByResults(this.results,
                             this.groupByMethod);
                     this.filteredResultsByType =
@@ -555,15 +553,17 @@
                 }
             },
             showHideClick: function () {
-                var element = document.getElementById('show-hide-toggle');
-                var feed_element = document.getElementById('feed-container');
-                if (element.textContent.trim() == "Hide") {
-                    element.textContent = "Show";
-                    feed_element.style.display = 'none';
-                } else {
-                    element.textContent = "Hide";
-                    feed_element.style.display = 'block';
-                }
+//                var element = document.getElementById('show-hide-toggle');
+                var element = document.querySelector('app-drawer');
+                element.toggle();
+//                var feed_element = document.getElementById('feed-container');
+//                if (element.textContent.trim() == "Hide") {
+//                    element.textContent = "Show";
+//                    feed_element.style.display = 'none';
+//                } else {
+//                    element.textContent = "Hide";
+//                    feed_element.style.display = 'block';
+//                }
             },
             searchQuery: function () {
                 console.log("search executed!");
