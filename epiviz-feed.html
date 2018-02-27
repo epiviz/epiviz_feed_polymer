@@ -18,8 +18,12 @@
 
 <link rel="import" href="bower_components/web-socket/web-socket.html">
 
-<link rel="import"
-      href="bower_components/app-layout/app-drawer/app-drawer.html">
+<!--<link rel="import"-->
+<!--href="bower_components/app-layout/app-drawer/app-drawer.html">-->
+<!--<link rel="import"-->
+<!--href="bower_components/app-layout/app-header/app-header.html">-->
+
+<link rel="import" href="bower_components/app-layout/app-layout.html">
 
 <link rel="import"
       href="bower_components/paper-icon-button/paper-icon-button.html">
@@ -28,8 +32,13 @@
     <template>
         <style>
             :host {
-                display: inline-block;
+                /*display: inline-block;*/
+                --app-drawer-width: 440px;
             }
+
+            /*epiviz-navigation {*/
+                /*width: 65%;*/
+            /*}*/
 
             .show-hide-button {
                 padding: 10px;
@@ -52,21 +61,26 @@
                 margin: 3px;
                 padding: 5px;
                 border-radius: 5px;
+                /*cursor: pointer;*/
+            }
+
+            .click-to-add, .hover-over-attribute {
                 cursor: pointer;
             }
 
             .feed-pane-container {
                 /*float: right;*/
-                position: fixed;
-                z-index: 100;
-                right: 0;
+                /*position: fixed;*/
+                z-index: auto;
+                /*right: 0;*/
                 text-align: initial;
                 background: #e6ecf0;
-                height: 100%;
+                margin-top: 48px;
+                height: calc(100% - 48px);
             }
 
             .pane.feed-pane {
-                width: 400px;
+                /*width: 400px;*/
                 padding: 5px;
                 flex-shrink: 0;
                 /*position: absolute;*/
@@ -92,7 +106,7 @@
 
             .pane.feed-pane h3 {
                 font-size: 14px;
-                display: block;
+                display: inline;
                 -webkit-margin-before: 0em;
                 -webkit-margin-after: 0em;
                 -webkit-margin-start: 0px;
@@ -106,10 +120,6 @@
 
             .arial-sans-font {
                 font-family: "Segoe UI", Arial, sans-serif;
-            }
-
-            .feed-header {
-
             }
 
             .feed-content {
@@ -156,29 +166,28 @@
             }
 
             app-drawer {
-                --app-drawer-scrim-background: white;
+                --app-drawer-scrim-background: none;
                 --app-drawer-content-container: {
-                  background-color: #B0BEC5;
+                    background-color: #e6ecf0;
                 }
             }
 
             app-header {
-                position: fixed;
+                /*position: fixed;*/
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 212px;
-                /*color: #dddddd;*/
-                --app-header-background-front-layer: {
-                  background-color: red;
-                };
-                --app-header-background-rear-layer: {
-                  background-color: blue;
-                };
+                background-color: #e0e2e2;
+                /*--app-header-background-front-layer: {*/
+                    /*background-color: red;*/
+                /*};*/
+                /*--app-header-background-rear-layer: {*/
+                    /*background-color: blue;*/
+                /*};*/
             }
 
-            app-toolbar {
-                height: 100px;
+            .header-bar-height {
+                height: 50px;
             }
 
             paper-spinner-lite {
@@ -192,124 +201,139 @@
 
         </style>
         <web-socket id="requestResults"
-            url="ws://localhost:5001/getdata"
-            on-message="handleResponse"
-            on-open="socketOpen">
+                    url="ws://localhost:5001/getdata"
+                    on-message="handleResponse"
+                    on-open="socketOpen">
             <!--on-error="showError"-->
             <!--on-close="endSocket"-->
         </web-socket>
         <!--<paper-button raised id='show-hide-toggle'-->
-                      <!--class="feed-show-hide show-hide-button"-->
-                      <!--on-click="showHideClick">Hide-->
+        <!--class="feed-show-hide show-hide-button"-->
+        <!--on-click="showHideClick">Hide-->
         <!--</paper-button>-->
-        <app-header condenses reveals effects="waterfall resize-title blend-background parallax-background">
-    <app-toolbar>
-      <h4 condensed-title>Epiviz Compute</h4>
-      <paper-icon-button icon="menu"
-                           id="show-hide-toggle"
-                           class="feed-show-hide show-hide-button"
-                           on-click="showHideClick"></paper-icon-button>
-    </app-toolbar>
-    <!--<app-toolbar class="tall">-->
-      <!--<h1 main-title>What is material?</h1>-->
-    <!--</app-toolbar>-->
-  </app-header>
+        <app-header-layout fullbleed>
+        <app-header class="header-bar-height" fixed>
+            <app-toolbar class="header-bar-height">
+                <div main-title>Epiviz Compute</div>
+                <div right>Feed</div>
+                <paper-icon-button icon="menu"
+                                   on-click="drawerToggleClicked"></paper-icon-button>
+            </app-toolbar>
+            <!--<app-toolbar class="tall">-->
+            <!--<h1 main-title>What is material?</h1>-->
+            <!--</app-toolbar>-->
+        </app-header>
 
-        <app-drawer id="drawer" align="right" swipe-open>
-        <div id="feed-container" class="feed-pane-container">
-            <div class="pane feed-pane">
-                <div class="feed-header arial-sans-font">
-                    <h2>
-                        <iron-icon icon="icons:trending-up"></iron-icon>
-                        Feed Results
-                        <paper-dropdown-menu class="group-dropdown-menu"
-                                             label="GroupBy">
-                            <paper-listbox class="dropdown-content"
-                                           selected="{{groupByMethod}}"
-                                           attr-for-selected="label"
-                                           on-selected-item-changed="groupByChanged">
-                                <paper-item label="All Types">All
-                                    Types
-                                </paper-item>
-                                <!--<paper-item label="Tissue Type">Tissue-->
-                                    <!--Type-->
-                                <!--</paper-item>-->
-                                <paper-item
-                                        label="Computation Type">Computation
-                                    Type
-                                </paper-item>
-                                <paper-item label="Data Type">Data
-                                    Type
-                                </paper-item>
-                            </paper-listbox>
-                        </paper-dropdown-menu>
-                    </h2>
-                    <paper-search-panel
-                            search="{{searchString}}"
-                            count="5"
-                            items="{{results}}"
-                            hide-filter-button="True"
-                            on-search="searchQuery"
-                            no-results-text=""
-                            on-search-changed="searchQuery">
-                    </paper-search-panel>
-                </div>
-                <div id="feed-results" class="overflow-y">
-                    <paper-spinner-lite active
-                                        class="blue"
-                                        hidden$="[[_hideSpinner]]">
+        <app-drawer-layout id="feed-drawer-layout">
 
-                    </paper-spinner-lite>
-                    <template is="dom-repeat"
-                              items="{{filteredResultsByType}}">
-                        <paper-button id="trigger trigger-[[item.type]]"
-                                      class="show-hide-button"
-                                      on-click="groupToggle"
-                                      aria-expanded$="[[opened]]">
-                            <iron-icon icon="icons:menu"></iron-icon>
-                            [[item.type]]
-                        </paper-button>
-                        <iron-collapse id="collapse-[[item.type]]"
-                                       opened="opened">
-                            <div class="grouped-list">
-                                <template is="dom-repeat"
-                                          items="[[item.list]]">
-                                    <paper-card on-tap="itemTapped">
-                                        <h3>The [[item.computation-type]]
-                                            between [[item.data-type-one]]
-                                            <i>[[item.attribute-one]]</i>
-                                            and
-                                            [[item.data-type-two]]
-                                            <i>[[item.attribute-two]]</i>
-                                            is
-                                            <b>[[item.value]]</b>. The
-                                            p-value is
-                                            <i>[[item.pvalue]]</i>.
-                                        </h3>
-
-                                    </paper-card>
-                                </template>
-                            </div>
-                        </iron-collapse>
-                    </template>
-                </div>
-
-                <!--<simple-iron-collapse class="pane feed-pane arial-sans-font"-->
-                <!--filtered-results="{{filteredResults}}"-->
-                <!--opened="[[opened]]"-->
-                <!--search-string="[[searchString]]"></simple-iron-collapse>-->
-
-            </div>
-        </div>
-            </app-drawer>
         <epiviz-navigation id="epiviz_env"
                            chr="{{chr}}"
                            start="{{start}}"
-                           end="{{end}}">
+                           end="{{end}}"
+                           no-logo>
             <!--<epiviz-json-scatter-plot class="charts" id="WLs"-->
             <!--dim-s="[&quot;expression_lung___normal&quot;,&quot;methylation_thyroid&quot;]" data="[{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.031022222222222222},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0021166666666666656},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.0021166666666666656},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.022628571428571425},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.033350000000000005},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.027325000000000002},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.00726},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02318},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.011949999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.011949999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.011949999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02835909090909091},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.024399999999999998},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.02125},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.02125},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.02125},{&quot;expression_lung___normal&quot;:0.3333333333,&quot;methylation_thyroid&quot;:-0.0724},{&quot;expression_lung___normal&quot;:0.6666666667,&quot;methylation_thyroid&quot;:-0.0992},{&quot;expression_lung___normal&quot;:0.6666666667,&quot;methylation_thyroid&quot;:-0.0992},{&quot;expression_lung___normal&quot;:0.6666666667,&quot;methylation_thyroid&quot;:-0.0992},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.027016666666666665},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.055850000000000004},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.07255},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0666},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0666},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0343},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01235},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0652},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02615},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0036000000000000003},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01458},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0013000000000000002},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.04228333333333333},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01774},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.01774},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.004960000000000001},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.004960000000000001},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.0101},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0021666666666666666},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0029000000000000002},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.021239999999999995},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.017089999999999998},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.037375},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.030516666666666664},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.030516666666666664},{&quot;expression_lung___normal&quot;:0.3333333333,&quot;methylation_thyroid&quot;:0.01052},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0038},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0038},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.00518},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.010575},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0264},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0264},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.023725000000000003},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.024255555555555555},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.024255555555555555},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0021999999999999997},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.0021999999999999997},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.009224999999999999},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.0011250000000000001},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.0011250000000000001},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:-0.0064333333333333334},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0064333333333333334},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.02928666666666667},{&quot;expression_lung___normal&quot;:1,&quot;methylation_thyroid&quot;:0.02928666666666667},{&quot;expression_lung___normal&quot;:0.3333333333,&quot;methylation_thyroid&quot;:-0.005625},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0006999999999999992},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.025333333333333333},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.0065875000000000005},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.010366666666666668},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.010366666666666668},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:-0.02114285714285714},{&quot;expression_lung___normal&quot;:0,&quot;methylation_thyroid&quot;:0.004633333333333332}]">-->
             <!--</epiviz-json-scatter-plot>-->
         </epiviz-navigation>
+
+        <app-drawer id="drawer" align="right" swipe-open>
+            <div id="feed-container" class="feed-pane-container">
+                <div class="pane feed-pane">
+                    <div class="feed-header arial-sans-font">
+                        <h2>
+                            <iron-icon icon="icons:trending-up"></iron-icon>
+                            Feed Results
+                            <paper-dropdown-menu class="group-dropdown-menu"
+                                                 label="GroupBy">
+                                <paper-listbox class="dropdown-content"
+                                               selected="{{groupByMethod}}"
+                                               attr-for-selected="label"
+                                               on-selected-item-changed="groupByChanged">
+                                    <paper-item label="All Types">All
+                                        Types
+                                    </paper-item>
+                                    <!--<paper-item label="Tissue Type">Tissue-->
+                                    <!--Type-->
+                                    <!--</paper-item>-->
+                                    <paper-item
+                                            label="Computation Type">Computation
+                                        Type
+                                    </paper-item>
+                                    <paper-item label="Data Type">Data
+                                        Type
+                                    </paper-item>
+                                </paper-listbox>
+                            </paper-dropdown-menu>
+                        </h2>
+                        <paper-search-panel
+                                search="{{searchString}}"
+                                count="5"
+                                items="{{results}}"
+                                hide-filter-button="True"
+                                on-search="searchQuery"
+                                no-results-text=""
+                                on-search-changed="searchQuery">
+                        </paper-search-panel>
+                    </div>
+                    <div id="feed-results" class="overflow-y">
+                        <paper-spinner-lite active
+                                            class="blue"
+                                            hidden$="[[_hideSpinner]]">
+
+                        </paper-spinner-lite>
+                        <template is="dom-repeat"
+                                  items="{{filteredResultsByType}}">
+                            <paper-button id="trigger trigger-[[item.type]]"
+                                          class="show-hide-button"
+                                          on-click="groupToggle"
+                                          aria-expanded$="[[opened]]">
+                                <iron-icon icon="icons:menu"></iron-icon>
+                                [[item.type]]
+                            </paper-button>
+                            <iron-collapse id="collapse-[[item.type]]"
+                                           opened="opened">
+                                <div class="grouped-list">
+                                    <template is="dom-repeat"
+                                              items="{{item.list}}"
+                                              as="feedItem">
+                                        <paper-card>
+                                                <iron-icon on-tap="itemTapped"
+                                                           class="click-to-add"
+                                                        icon="image:add-to-photos">
+                                                </iron-icon>
+
+                                            <h3>The [[feedItem.computation-type]]
+                                                between [[feedItem.data-type-one]]
+                                                <a class="hover-over-attribute"
+                                                        on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                and
+                                                [[feedItem.data-type-two]]
+                                                <a class="hover-over-attribute"
+                                                        on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                is
+                                                <b>[[feedItem.value]]</b>. The
+                                                p-value is
+                                                <i>[[feedItem.pvalue]]</i>.
+                                            </h3>
+
+                                        </paper-card>
+                                    </template>
+                                </div>
+                            </iron-collapse>
+                        </template>
+                    </div>
+
+                    <!--<simple-iron-collapse class="pane feed-pane arial-sans-font"-->
+                    <!--filtered-results="{{filteredResults}}"-->
+                    <!--opened="[[opened]]"-->
+                    <!--search-string="[[searchString]]"></simple-iron-collapse>-->
+
+                </div>
+            </div>
+        </app-drawer>
+        </app-drawer-layout>
+        </app-header-layout>
+
 
     </template>
     <script>
@@ -387,6 +411,11 @@
                 '_rangeChanged(chr, start, end)'
             ],
 
+            listeners: {
+                'epiviz-chart-deleted': 'chartDeleted'
+            },
+
+
             _rangeChanged: function (chr, start, end) {
                 this.filteredResultsByType = [];
                 this.set("_hideSpinner", false);
@@ -397,7 +426,7 @@
                 };
 
                 // increase the counter to deal with multiple requests
-                if(this.seqID == null) {
+                if (this.seqID == null) {
                     this.seqID = 0;
                 } else {
                     this.seqID += 1;
@@ -421,7 +450,7 @@
                 }
             },
 
-            socketOpen: function() {
+            socketOpen: function () {
                 this.webSocketReady = true;
                 this._rangeChanged();
             },
@@ -431,12 +460,15 @@
             },
             handleResponse: function (event) {
                 var data = JSON.parse(event.detail);
-                if(data == this.seqID) {
+                if (data == this.seqID) {
                     this.webSocketReady = false;
                     this.$.requestResults.close();
                     this.webSocketCounter -= 1;
                     return;
                 }
+                data.forEach(function(element) {
+                    element["icon"] = "image:add-to-photos";
+                });
                 this.results = this.results.concat(data);
                 if (this.results != null) {
                     // polymer array override dirty checking
@@ -453,13 +485,19 @@
                 }
             },
 
-            itemTapped: function (e) {
-                this.clicked(e.model.item);
+            attributeTapped: function(e) {
+                console.log(e.srcElement.text);
+                this.searchString = e.srcElement.text;
+//                console.log($(e.srcElement).text());
             },
 
-            clicked: function (result) {
-                var test_measure = result['data-source'];
+            itemTapped: function (e) {
+                var iconElement = e.currentTarget;
+                this.clicked(e.model.feedItem, iconElement);
+            },
 
+            clicked: function (result, iconElement) {
+                var test_measure = result['data-source'];
                 // check whether there is chart already in the main visualization.
                 if (result['plot-id'] != null &&
                         document.getElementById(result['plot-id']) != null) {
@@ -486,17 +524,14 @@
                     var elementId = this._generateId();
 
                     var customScatterPlot =
-                            "<epiviz-json-scatter-plot class='charts' id=" +
-                            elementId +
-                            " dim-s='" +
-                            JSON.stringify(dims) +
-                            "' data='" +
-                            JSON.stringify(data) +
+                            "<epiviz-json-scatter-plot class='charts' id='epiviz-"
+                            + elementId + "' dim-s='" + JSON.stringify(dims) +
+                            "' data='" + JSON.stringify(data) +
                             "'></epiviz-json-scatter-plot>";
                     // record the plot-id to scroll to the right position when
                     // click to add the chart, so do not create repeated charts
-                    result['plot-id'] = elementId;
-
+                    result['plot-id'] = "epiviz-" + elementId;
+                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
                     $("#navHeader").append(customScatterPlot);
 //                    epivizScatterPlot = customScatterPlot
 //                    customScatterPlot.chartSettings.title = result['title'];
@@ -518,21 +553,25 @@
                     // record the plot-id to scroll to the right position when
                     // click to add the chart, so do not create repeated charts
                     result['plot-id'] = block_element.getAttribute('plot-id');
+                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
                     Polymer.dom(document.getElementById("epiviz_env")).appendChild(block_element);
 
                     var settings =
                             JSON.parse(JSON.stringify(block_element.chartSettings));
                     settings.title = result['title'];
                     var domElem = Polymer.dom(document.getElementById("epiviz_env")).querySelector('[plot-id$="' +
-                                    result['plot-id'] +
-                                    '"]');
+                            result['plot-id'] +
+                            '"]');
 
                     domElem.setAttribute("chart-settings",
                             JSON.stringify(settings));
-                    domElem.scrollIntoView();
-                    $(domElem).effect("highlight", {
-                        color: '#e6ecf0b'
-                    }, 2000);
+                    var self = this;
+                    setTimeout(function(){
+                        domElem.scrollIntoView();
+                        $(domElem).effect("highlight", {
+                            color: '#e6ecf0b'
+                        }, 1000);
+                    }, 100);
                 }
                 else {
                     var element = document.createElement('epiviz-scatter-plot');
@@ -544,14 +583,28 @@
                     // record the plot-id to scroll to the right position when
                     // click to add the chart, so do not create repeated charts
                     result['plot-id'] = element.getAttribute('plot-id');
-
+                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
                     Polymer.dom(document.getElementById("epiviz_env")).appendChild(element);
-                    element.scrollIntoView();
-                    $(element).effect("highlight", {
-                        color: '#e6ecf0b'
-                    }, 2000);
+                    setTimeout(function(){
+                        element.scrollIntoView();
+                        $(element).effect("highlight", {
+                            color: '#e6ecf0b'
+                        }, 1000);
+                    }, 100);
+                }
+                iconElement.setAttribute("icon", "image:collections-bookmark");
+                iconElement.setAttribute("style", "color: #3284FF");
+            },
+
+            drawerToggleClicked: function() {
+                var drawerLayout = document.getElementById('feed-drawer-layout');
+                if (drawerLayout.forceNarrow || !drawerLayout.narrow) {
+                    drawerLayout.forceNarrow = !drawerLayout.forceNarrow;
+                } else {
+                    drawerLayout.drawer.toggle();
                 }
             },
+
             showHideClick: function () {
 //                var element = document.getElementById('show-hide-toggle');
                 var element = document.querySelector('app-drawer');
@@ -652,7 +705,7 @@
                         if (resultsList.length == 0) {
                             return [];
                         }
-                        var groupedResults = {"all": resultsList};
+                        var groupedResults = {"All Computations": resultsList};
                         return groupedResults;
                     default:
                         // do nothing for now
@@ -699,6 +752,21 @@
                     classes += ' selected';
                 }
                 return classes;
+            },
+            chartDeleted: function(e) {
+                var plotId = e.detail.id;
+                var iconId = "icon-" + plotId;
+                var feedItemElement = document.getElementById(iconId);
+                feedItemElement.setAttribute("icon",
+                        "image:add-to-photos");
+                feedItemElement.setAttribute("style", "");
+                feedItemElement.setAttribute("id", "");
+            },
+            _scrollIntoView: function(domElement) {
+                domElement.scrollIntoView();
+                $(domElement).effect("highlight", {
+                    color: '#e6ecf0b'
+                }, 2000);
             }
         });
 
@@ -712,9 +780,14 @@
                         result['attribute-two'] + ' is ' +
                         result['value'].toFixed(2) + '.';
                 // get title
-                result['title'] = result['computation-type'] + ' = ' +
-                        result['value'].toFixed(2) + ', p-value is ' +
-                        result['pvalue'].toFixed(2);
+//                result['title'] = result['computation-type'] + ' = ' +
+//                        result['value'].toFixed(2) + ', p-value is ' +
+//                        result['pvalue'].toFixed(2);
+                result['title'] = result['computation-type'] +
+                        ' between ' +
+                        result['attribute-one'] + ' and ' +
+                        result['attribute-two'] + ' is ' +
+                        result['value'].toFixed(2);
 //                result['title'] = result['computation-type'] +
 //                        ' between ' + result['data-type-one'] + ' ' +
 //                        result['attribute-one'] + ' and ' +
