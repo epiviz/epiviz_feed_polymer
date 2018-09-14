@@ -1,0 +1,720 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/epiviz-data-source/epiviz-data-source.html">
+<link rel="import" href="bower_components/epiviz-charts/epiviz-charts.html">
+<link rel="import" href="bower_components/promise-polyfill/promise-polyfill-lite.html">
+<link rel="import" href="bower_components/paper-search/paper-search-panel.html">
+<link rel="import" href="bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="bower_components/paper-spinner/paper-spinner-lite.html">
+
+<link rel="import" href="bower_components/paper-card/paper-card.html">
+
+<link rel="import" href="bower_components/websocket-component/websocket-component.html">
+
+<link rel="import" href="bower_components/app-layout/app-layout.html">
+
+<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+
+<dom-module id="epiviz-feed">
+    <template>
+        <style>
+            :host {
+                /*display: inline-block;*/
+                --app-drawer-width: 440px;
+                font-family: 'Open Sans', sans-serif;
+            }
+
+            .show-hide-button {
+                padding: 10px;
+                background-color: #f3f3f3;
+                border: 1px solid #dedede;
+                border-radius: 5px;
+                font-size: 16px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+                text-align: center;
+                display: block;
+            }
+
+            :host([opened]) .trigger {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+
+            paper-card {
+                margin: 3px;
+                padding: 5px;
+                border-radius: 5px;
+                /*cursor: pointer;*/
+            }
+
+            .click-to-add {
+                cursor: pointer;
+            }
+
+            .hover-over-attribute {
+                cursor: pointer;
+                color: #4285f4;
+            }
+
+            .feed-pane-container {
+                /*float: right;*/
+                /*position: fixed;*/
+                z-index: auto;
+                /*right: 0;*/
+                text-align: initial;
+                background: #e6ecf0;
+                margin-top: 48px;
+                height: calc(100% - 48px);
+            }
+
+            .pane.feed-pane {
+                /*width: 400px;*/
+                padding: 5px;
+                flex-shrink: 0;
+                /*position: absolute;*/
+                /*z-index: 10;*/
+            }
+
+            .pane.feed-pane:hover {
+                height: 100%;
+            }
+
+            .pane.feed-pane h2 {
+                color: #38425D;
+                font-size: 16px;
+                line-height: 20px;
+                font-weight: 700;
+                margin: 0 0 10px;
+                display: block;
+                /*-webkit-margin-before: 0.83em;*/
+                /*-webkit-margin-after: 0.83em;*/
+                -webkit-margin-start: 0;
+                -webkit-margin-end: 0;
+            }
+
+            .pane.feed-pane h3 {
+                font-size: 14px;
+                display: inline;
+                -webkit-margin-before: 0em;
+                -webkit-margin-after: 0em;
+                -webkit-margin-start: 0px;
+                -webkit-margin-end: 0px;
+                font-weight: normal;
+            }
+
+            .open-sans-font {
+                font-family: 'Open Sans', sans-serif;
+            }
+
+            .arial-sans-font {
+                font-family: "Segoe UI", Arial, sans-serif;
+            }
+
+            .feed-content {
+                font-size: 12px;
+                line-height: 18px;
+                cursor: pointer;
+            }
+
+            .feed-element-container {
+                background-color: #fff;
+                /*border-style: groove;*/
+                cursor: pointer;
+                border-bottom: 2px solid #e6ecf0;
+                padding: 3px;
+            }
+
+            .feed-element-container.selected {
+                outline: 0;
+                background-color: #ddd;
+            }
+
+            .feed-show-hide {
+                position: fixed;
+                right: 10px;
+                top: 10px;
+                z-index: 150;
+            }
+
+            #feed-header {
+                height: 130px;
+            }
+
+            .grouped-list {
+                padding: 15px;
+                border: 1px solid #dedede;
+            }
+
+            .group-dropdown-menu {
+                max-width: 160px;
+            }
+
+            .overflow-y {
+                overflow-y: scroll;
+            }
+
+            #feed-results {
+                height: 75%;
+            }
+
+            app-drawer {
+                --app-drawer-scrim-background: none;
+                --app-drawer-content-container: {
+                    background-color: #e6ecf0;
+                }
+            }
+
+            app-header {
+                /*position: fixed;*/
+                top: 0;
+                left: 0;
+                /* width: 100%; */
+                background-color: #e0e2e2;
+                /*--app-header-background-front-layer: {*/
+                /*background-color: red;*/
+                /*};*/
+                /*--app-header-background-rear-layer: {*/
+                /*background-color: blue;*/
+                /*};*/
+            }
+
+            .header-bar-height {
+                height: 50px;
+            }
+
+            paper-search-panel {
+                margin: 5px;
+            }
+
+            paper-spinner-lite {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%);
+                height: 75px;
+                width: 75px;
+            }
+        </style>
+
+        <!-- <websocket-component id="requestResults" url="ws://localhost:5001/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
+        </websocket-component> -->
+        <websocket-component id="requestResults" url="ws://54.157.53.251/feed/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
+        </websocket-component>
+
+        <app-header-layout fullbleed="">
+            <app-header class="header-bar-height" slot="header" fixed="">
+                <app-toolbar class="header-bar-height">
+                    <div main-title="">Epiviz Compute</div>
+                    <div right="">Feed</div>
+                    <paper-icon-button icon="menu" on-click="drawerToggleClicked"></paper-icon-button>
+                </app-toolbar>
+            </app-header>
+
+            <app-drawer-layout id="feed-drawer-layout">
+
+                <epiviz-navigation id="epiviz_env" chr="{{chr}}" start="{{start}}" end="{{end}}" no-logo="">
+                </epiviz-navigation>
+
+                <app-drawer id="drawer" slot="drawer" align="right" opened="" swipe-open="">
+                    <div id="feed-container" class="feed-pane-container">
+                        <div class="pane feed-pane">
+                            <div class="feed-header arial-sans-font">
+                                <h2>
+                                    <iron-icon icon="icons:trending-up"></iron-icon>
+                                    Feed Results
+                                    <paper-dropdown-menu class="group-dropdown-menu" label="GroupBy">
+                                        <paper-listbox slot="dropdown-content" selected="{{groupByMethod}}" attr-for-selected="label" on-selected-changed="groupByChanged">
+                                            <paper-item label="All Types">All Types
+                                            </paper-item>
+                                            <!--<paper-item label="Tissue Type">Tissue-->
+                                            <!--Type-->
+                                            <!--</paper-item>-->
+                                            <paper-item label="Computation Type">Computation Type
+                                            </paper-item>
+                                            <paper-item label="Data Type">Data Type
+                                            </paper-item>
+                                        </paper-listbox>
+                                    </paper-dropdown-menu>
+                                </h2>
+                                <paper-search-panel search="{{searchString}}" count="5" items="{{results}}" hide-filter-button="True" on-search="searchQuery" no-results-text="" on-search-changed="searchQuery">
+                                </paper-search-panel>
+                            </div>
+                            <div id="feed-results" class="overflow-y">
+                                <paper-spinner-lite id="loadingSpinner" active="" class="blue">
+
+                                </paper-spinner-lite>
+                                <template is="dom-repeat" items="{{filteredResultsByType}}">
+                                    <paper-button id="trigger-[[_sanitize(item.type)]]" class="trigger show-hide-button" on-click="groupToggle" aria-expanded$="[[opened]]">
+                                        <iron-icon icon="icons:menu"></iron-icon>
+                                        [[item.type]]
+                                    </paper-button>
+                                    <iron-collapse id="collapse-[[_sanitize(item.type)]]" opened="opened">
+                                        <div class="grouped-list">
+                                            <template is="dom-repeat" items="{{item.list}}" as="feedItem">
+                                                <paper-card>
+                                                    <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
+                                                    </iron-icon>
+
+                                                    <h3>The [[feedItem.computation-type]] between [[feedItem.data-type-one]]
+                                                        <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                        and [[feedItem.data-type-two]]
+                                                        <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                        is
+                                                        <b>[[feedItem.value]]</b>. The p-value is
+                                                        <i>[[feedItem.pvalue]]</i>.
+                                                    </h3>
+
+                                                </paper-card>
+                                            </template>
+                                        </div>
+                                    </iron-collapse>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </app-drawer>
+
+            </app-drawer-layout>
+
+        </app-header-layout>
+
+    </template>
+    <script>class EpivizFeed extends Polymer.Element {
+  static get is() {
+    return 'epiviz-feed';
+  }
+
+  static get properties() {
+    return {
+      results: {
+        type: Array,
+        value: []
+      },
+      filteredResults: {
+        type: Object,
+        value: {},
+        notify: true
+      },
+      filteredResultsByType: {
+        type: Array,
+        notify: true
+      },
+      selectedItem: {
+        type: Object,
+        notify: true
+      },
+      selectItem: {
+        type: Object,
+        notify: true
+      },
+      groupByMethod: {
+        type: String,
+        value: "All Types",
+        notify: true
+      },
+      searchString: {
+        type: String
+      },
+      opened: {
+        type: Boolean,
+        reflectToAttribute: true
+      },
+      chr: {
+        type: String,
+        value: "chr11",
+        notify: true
+      },
+      start: {
+        type: Number,
+        value: 3947153,
+        notify: true
+      },
+      end: {
+        type: Number,
+        value: 7164991,
+        notify: true
+      },
+      seqID: {
+        type: Number,
+        value: 0
+      },
+      webSocketReady: {
+        type: Boolean,
+        value: false
+      },
+      webSocketCounter: {
+        type: Number,
+        value: 0
+      }
+    };
+  }
+
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('epivizchartdeleted', function (e) {
+      console.log("event listener!");
+    });
+  }
+
+  static get observers() {
+    return ['_rangeChanged(chr, start, end)'];
+  }
+
+  _rangeChanged(chr, start, end) {
+    if (this.chr == undefined || this.start == undefined || this.end == undefined) {
+      return;
+    }
+
+    this.filteredResultsByType = [];
+    this.shadowRoot.querySelector("#loadingSpinner").active = true;
+    var seqData = {
+      start: this.start,
+      end: this.end,
+      chr: this.chr
+    }; // increase the counter to deal with multiple requests
+
+    if (this.seqID == null) {
+      this.seqID = 0;
+    } else {
+      this.seqID += 1;
+    }
+
+    var msgToSend = {
+      seq: this.seqID,
+      data: seqData
+    };
+    console.log(this.webSocketReady); // web sockets
+
+    if (this.webSocketReady) {
+      this.$.requestResults.send(JSON.stringify(msgToSend));
+    } else {
+      if (this.webSocketCounter == 0 || this.webSocketCounter == undefined) {
+        this.$.requestResults.open();
+        this.webSocketCounter = 0;
+      }
+
+      this.webSocketCounter += 1;
+    }
+  }
+
+  socketOpen() {
+    this.webSocketReady = true;
+
+    this._rangeChanged();
+  }
+
+  ready() {
+    super.ready();
+    this.notMethy = true;
+  }
+
+  handleResponse(event) {
+    var data = JSON.parse(event.detail.data);
+
+    if (data == this.seqID) {
+      this.webSocketReady = false;
+      this.$.requestResults.close();
+      this.webSocketCounter -= 1;
+      return;
+    }
+
+    data.forEach(function (element) {
+      element["icon"] = "image:add-to-photos";
+    });
+    this.results = this.results.concat(data);
+
+    if (this.results != null) {
+      // polymer array override dirty checking
+      this.filteredResults = this._groupByResults(this.results, this.groupByMethod);
+      this.filteredResultsByType = this._toTypeArray(this.filteredResults);
+      this.set("filteredResultsByType", []);
+      this.set("filteredResultsByType", this._toTypeArray(this.filteredResults));
+      this.notifyPath('filteredResultsByType');
+      this.getDescription(this.results);
+      this.shadowRoot.querySelector("#loadingSpinner").active = false;
+    }
+  }
+
+  attributeTapped(e) {
+    console.log(e.srcElement.text);
+    this.searchString = e.srcElement.text;
+  }
+
+  itemTapped(e) {
+    var iconElement = e.currentTarget;
+    this.clicked(e.model.feedItem, iconElement);
+  }
+
+  clicked(result, iconElement) {
+    var test_measure = result['data-source']; // check whether there is chart already in the main visualization.
+
+    if (result['plot-id'] != null && this.shadowRoot.getElementById(result['plot-id']) != null) {
+      var elementToFocus = this.shadowRoot.getElementById(result['plot-id']);
+      elementToFocus.scrollIntoView();
+      $(elementToFocus).effect("highlight", {
+        color: '#e6ecf0b'
+      }, 2000);
+      return;
+    } // methylation charts should be customized.
+
+
+    if (result['data-type-one'] == 'methylation' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'methylation') {
+      var dims = [result['data-type-one'] + '_' + result['attribute-one'], result['data-type-two'] + '_' + result['attribute-two']];
+      var data = result['data'];
+
+      var elementId = this._generateId();
+
+      var customScatterPlot = "<epiviz-json-scatter-plot slot='charts' id='epiviz-" + elementId + "' dim-s='" + JSON.stringify(dims) + "' data='" + JSON.stringify(data) + "'></epiviz-json-scatter-plot>"; // record the plot-id to scroll to the right position when
+      // click to add the chart, so do not create repeated charts
+
+      result['plot-id'] = "epiviz-" + elementId;
+      iconElement.setAttribute("id", "icon-" + result['plot-id']);
+      $("#navHeader").append(customScatterPlot);
+    } // two block data, add a block overlapping track
+    else if (result['data-type-one'] == 'block' && result['data-type-two'] == 'block') {
+        test_measure[0]['type'] = 'range';
+        test_measure[1]['type'] = 'range';
+        test_measure[0]['metadata'] = null;
+        test_measure[1]['metadata'] = null;
+        var block_element = document.createElement('epiviz-stacked-blocks-track');
+        block_element.setAttribute('measurements', JSON.stringify(test_measure));
+        block_element.slot = 'charts';
+        this.shadowRoot.getElementById("epiviz_env").appendChild(block_element); // record the plot-id to scroll to the right position when
+        // click to add the chart, so do not create repeated charts
+
+        result['plot-id'] = block_element.getAttribute('plot-id');
+        iconElement.setAttribute("id", "icon-" + result['plot-id']);
+        var settings = JSON.parse(JSON.stringify(block_element.configSrc.chartSettings));
+        settings.title = result['title'];
+        var domElem = this.shadowRoot.getElementById("epiviz_env").querySelector('[plot-id$="' + result['plot-id'] + '"]');
+        domElem.setAttribute("chart-settings", JSON.stringify(settings));
+        var self = this;
+        setTimeout(function () {
+          domElem.scrollIntoView();
+          $(domElem).effect("highlight", {
+            color: '#e6ecf0b'
+          }, 1000);
+        }, 100);
+      } else {
+        var element = document.createElement('epiviz-scatter-plot');
+        element.setAttribute('measurements', JSON.stringify(test_measure));
+        element.configSrc.chartSettings.title = result['title'];
+        element.slot = 'charts';
+        this.shadowRoot.getElementById("epiviz_env").appendChild(element); // record the plot-id to scroll to the right position when
+        // click to add the chart, so do not create repeated charts
+
+        result['plot-id'] = element.getAttribute('plot-id');
+        iconElement.setAttribute("id", "icon-" + result['plot-id']);
+        setTimeout(function () {
+          element.scrollIntoView();
+          $(element).effect("highlight", {
+            color: '#e6ecf0b'
+          }, 1000);
+        }, 100);
+      }
+
+    iconElement.setAttribute("icon", "image:collections-bookmark");
+    iconElement.setAttribute("style", "color: #3284FF");
+  }
+
+  drawerToggleClicked() {
+    var drawerLayout = this.shadowRoot.getElementById('feed-drawer-layout');
+
+    if (drawerLayout.forceNarrow || !drawerLayout.narrow) {
+      drawerLayout.forceNarrow = !drawerLayout.forceNarrow;
+    } else {
+      drawerLayout.drawer.toggle();
+    }
+  }
+
+  showHideClick() {
+    var element = this.shadowRoot.querySelector('app-drawer');
+    element.toggle();
+  }
+
+  searchQuery() {
+    console.log("search executed!");
+
+    if (this.searchString != undefined && this.searchString != null && this.searchString != "") {
+      var query = this.searchString;
+      var filtered = this.results.filter(function (result) {
+        // Array.prototype.filter
+        if (result['attribute-one'].includes(query) || result['attribute-two'].includes(query) || result['computation-type'].includes(query) || result['data-type-one'].includes(query) || result['data-type-two'].includes(query) || result['value'].toString().includes(query)) {
+          return result;
+        }
+      }); //                    this.filteredResults = {};
+      //                    this.filteredResults["all"] = filtered;
+
+      this.filteredResults = this._groupByResults(filtered, this.groupByMethod);
+      this.filteredResultsByType = this._toTypeArray(this.filteredResults);
+    } else if (this.results != undefined) {
+      this.filteredResults = this._groupByResults(this.results, this.groupByMethod);
+      this.filteredResultsByType = this._toTypeArray(this.filteredResults);
+    }
+  }
+
+  groupByChanged(e) {
+    this.groupByMethod = e.detail.value;
+
+    if (this.groupByMethod != undefined && this.results != undefined) {
+      var groupByType = this.groupByMethod; //                this.groupByMethod = groupByType;
+
+      console.log(groupByType);
+
+      if (groupByType == "All") {
+        $("#trigger-All").style.visibility = 'hidden';
+      }
+
+      this.filteredResults = this._groupByResults(this.results, groupByType);
+      this.filteredResultsByType = this._toTypeArray(this.filteredResults);
+    }
+  }
+
+  _groupByResults(resultsList, groupByType) {
+    switch (groupByType) {
+      case "Computation Type":
+        var groupedResults = resultsList.reduce(function (r, a) {
+          r[a["computation-type"]] = r[a["computation-type"]] || [];
+          r[a["computation-type"]].push(a);
+          return r;
+        }, Object.create(null));
+        return groupedResults;
+        break;
+      //                    case "Tissue Type":
+      //                        var groupedResults =
+      //                                resultsList.reduce(function (r, a) {
+      //                                    r[a["computation-type"]] =
+      //                                            r[a["computation-type"]] || [];
+      //                                    r[a["computation-type"]].push(a);
+      //                                    return r;
+      //                                }, Object.create(null));
+      //                        this.filteredResults = groupedResults;
+      //                        this.filteredResultsByType =
+      //                                this._toTypeArray(this.filteredResults);
+      //                        break;
+
+      case "Data Type":
+        var groupedResults = resultsList.reduce(function (r, a) {
+          var key_one = a["data-type-one"];
+          var key_two = a["data-type-two"];
+          r[key_one] = r[key_one] || [];
+          r[key_one].push(a);
+
+          if (key_one != key_two) {
+            r[key_two] = r[key_two] || [];
+            r[key_two].push(a);
+          }
+
+          return r;
+        }, Object.create(null));
+        return groupedResults;
+        break;
+
+      case "All Types":
+        if (resultsList.length == 0) {
+          return [];
+        }
+
+        var groupedResults = {
+          "All Computations": resultsList
+        };
+        return groupedResults;
+
+      default: // do nothing for now
+
+    }
+  }
+
+  groupToggle(e) {
+    this.shadowRoot.querySelector("#collapse-" + this._sanitize(e.model.item.type)).toggle();
+  }
+
+  _toTypeArray(resultsByType) {
+    if (resultsByType != undefined && Object.keys(resultsByType).length > 0) {
+      return Object.keys(resultsByType).map(function (key) {
+        if (resultsByType[key] == undefined || resultsByType[key].length == 0) {
+          return;
+        }
+
+        return {
+          type: key,
+          list: resultsByType[key]
+        };
+      });
+    } else {
+      return [];
+    }
+  }
+
+  _generateId() {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < 3; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+  }
+
+  _getIndexClass(result, isSelected) {
+    var classes = 'feed-element-container';
+    var test_measure = result['data-source']; // check whether there is chart already in the main visualization.
+
+    if (result['plot-id'] != null && this.shadowRoot.getElementById(result['plot-id']) != null || isSelected) {
+      classes += ' selected';
+    }
+
+    return classes;
+  }
+
+  chartDeleted(e) {
+    var plotId = e.detail.id;
+    var iconId = "icon-" + plotId;
+    var feedItemElement = this.shadowRoot.getElementById(iconId);
+    feedItemElement.setAttribute("icon", "image:add-to-photos");
+    feedItemElement.setAttribute("style", "");
+    feedItemElement.setAttribute("id", "");
+  }
+
+  _scrollIntoView(domElement) {
+    domElement.scrollIntoView();
+    $(domElement).effect("highlight", {
+      color: '#e6ecf0b'
+    }, 2000);
+  }
+
+  _sanitize(computationType) {
+    var compTypeNoSpace = computationType.replace(" ", "");
+    return compTypeNoSpace;
+  }
+
+  getDescription(results) {
+    results.forEach(function (result) {
+      // get description
+      result['description'] = result['computation-type'] + ' between ' + result['data-type-one'] + ' ' + result['attribute-one'] + ' and ' + result['data-type-two'] + ' ' + result['attribute-two'] + ' is ' + result['value'].toFixed(2) + '.'; // get title
+      //                result['title'] = result['computation-type'] + ' = ' +
+      //                        result['value'].toFixed(2) + ', p-value is ' +
+      //                        result['pvalue'].toFixed(2);
+
+      result['title'] = result['computation-type'] + ' between ' + result['attribute-one'] + ' and ' + result['attribute-two'] + ' is ' + result['value'].toFixed(2); //                result['title'] = result['computation-type'] +
+      //                        ' between ' + result['data-type-one'] + ' ' +
+      //                        result['attribute-one'] + ' and ' +
+      //                        result['data-type-two'] + ' ' +
+      //                        result['attribute-two'];
+    });
+  }
+
+}
+
+;
+customElements.define(EpivizFeed.is, EpivizFeed);</script>
+</dom-module>

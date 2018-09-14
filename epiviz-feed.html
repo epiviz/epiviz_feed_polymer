@@ -202,7 +202,9 @@
             }
         </style>
 
-        <websocket-component id="requestResults" url="ws://localhost:5001/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
+        <!-- <websocket-component id="requestResults" url="ws://localhost:5001/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
+        </websocket-component> -->
+        <websocket-component id="requestResults" url="ws://54.157.53.251/feed/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
         </websocket-component>
 
         <app-header-layout fullbleed>
