@@ -21,6 +21,6 @@
     "paper-search": "^2.0.9",
     "paper-card": "polymerelements/paper-card#^2.1.0",
     "app-layout": "PolymerElements/app-layout#^2.1.1",
-    "websocket-component": "^2.1.2"
+    "web-socket": "arkihillel/web-socket#^2.0.1"
   }
 }
