@@ -14,7 +14,9 @@
 
 <link rel="import" href="bower_components/paper-card/paper-card.html">
 
-<link rel="import" href="bower_components/websocket-component/websocket-component.html">
+<link rel="import" href="bower_components/web-socket/web-socket.html">
+
+<!-- <link rel="import" href="bower_components/websocket-component/websocket-component.html"> -->
 
 <link rel="import" href="bower_components/app-layout/app-layout.html">
 
@@ -204,8 +206,8 @@
 
         <!-- <websocket-component id="requestResults" url="ws://localhost:5001/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
         </websocket-component> -->
-        <websocket-component id="requestResults" url="ws://54.157.53.251/feed/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
-        </websocket-component>
+        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket>
 
         <app-header-layout fullbleed="">
             <app-header class="header-bar-height" slot="header" fixed="">
@@ -218,7 +220,7 @@
 
             <app-drawer-layout id="feed-drawer-layout">
 
-                <epiviz-navigation id="epiviz_env" chr="{{chr}}" start="{{start}}" end="{{end}}" no-logo="">
+                <epiviz-navigation id="epiviz_env" chr="{{chr}}" start="{{start}}" end="{{end}}" no-logo="" hide-nav="" hide-chr-input="">
                 </epiviz-navigation>
 
                 <app-drawer id="drawer" slot="drawer" align="right" opened="" swipe-open="">
@@ -375,28 +377,28 @@
       return;
     }
 
-    this.filteredResultsByType = [];
-    this.shadowRoot.querySelector("#loadingSpinner").active = true;
-    var seqData = {
-      start: this.start,
-      end: this.end,
-      chr: this.chr
-    }; // increase the counter to deal with multiple requests
-
-    if (this.seqID == null) {
-      this.seqID = 0;
-    } else {
-      this.seqID += 1;
-    }
-
-    var msgToSend = {
-      seq: this.seqID,
-      data: seqData
-    };
     console.log(this.webSocketReady); // web sockets
 
     if (this.webSocketReady) {
-      this.$.requestResults.send(JSON.stringify(msgToSend));
+      this.filteredResultsByType = [];
+      this.shadowRoot.querySelector("#loadingSpinner").active = true;
+      var seqData = {
+        start: this.start,
+        end: this.end,
+        chr: this.chr
+      }; // increase the counter to deal with multiple requests
+
+      if (this.seqID == null) {
+        this.seqID = 0;
+      } else {
+        this.seqID += 1;
+      }
+
+      var msgToSend = {
+        seq: this.seqID,
+        data: seqData
+      };
+      this.$.requestResults.send(msgToSend);
     } else {
       if (this.webSocketCounter == 0 || this.webSocketCounter == undefined) {
         this.$.requestResults.open();
@@ -419,14 +421,12 @@
   }
 
   handleResponse(event) {
-    var data = JSON.parse(event.detail.data);
-
-    if (data == this.seqID) {
-      this.webSocketReady = false;
-      this.$.requestResults.close();
-      this.webSocketCounter -= 1;
-      return;
-    }
+    var data = JSON.parse(event.detail); // if (data == this.seqID) {
+    //     this.webSocketReady = false;
+    //     this.$.requestResults.close();
+    //     this.webSocketCounter -= 1;
+    //     return;
+    // }
 
     data.forEach(function (element) {
       element["icon"] = "image:add-to-photos";
