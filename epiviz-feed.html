@@ -204,10 +204,11 @@
             }
         </style>
 
-        <!-- <websocket-component id="requestResults" url="ws://localhost:5001/getdata" on-websocket-open="socketOpen" on-websocket-message="handleResponse">
-        </websocket-component> -->
         <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket>
+
+        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket> -->
 
         <app-header-layout fullbleed>
             <app-header class="header-bar-height" slot="header" fixed>
@@ -382,6 +383,7 @@
                 // web sockets
                 if (this.webSocketReady) {
                     this.filteredResultsByType = [];
+                    this.results = [];
                     this.shadowRoot.querySelector("#loadingSpinner").active = true;
                     var seqData = {
                         start: this.start,
@@ -424,12 +426,12 @@
 
             handleResponse(event) {
                 var data = JSON.parse(event.detail);
-                // if (data == this.seqID) {
-                //     this.webSocketReady = false;
-                //     this.$.requestResults.close();
-                //     this.webSocketCounter -= 1;
-                //     return;
-                // }
+                if (data == this.seqID) {
+                    // this.webSocketReady = false;
+                    // this.$.requestResults.close();
+                    // this.webSocketCounter -= 1;
+                    return;
+                }
                 data.forEach(function (element) {
                     element["icon"] = "image:add-to-photos";
                 });
@@ -486,16 +488,20 @@
 
                     var elementId = this._generateId();
 
-                    var customScatterPlot =
-                        "<epiviz-json-scatter-plot slot='charts' id='epiviz-"
-                        + elementId + "' dim-s='" + JSON.stringify(dims) +
-                        "' data='" + JSON.stringify(data) +
-                        "'></epiviz-json-scatter-plot>";
+                    var customScatterPlot = document.createElement('epiviz-scatter-plot');
+                    customScatterPlot.setAttribute('json-data',
+                        JSON.stringify(data));
+                    customScatterPlot.setAttribute('dim-s',
+                        JSON.stringify(dims));
+                    customScatterPlot.configSrc.chartSettings.title = result['title'];
+                    customScatterPlot.slot = 'charts';
+
+                    this.shadowRoot.getElementById("epiviz_env").appendChild(customScatterPlot);
+
                     // record the plot-id to scroll to the right position when
                     // click to add the chart, so do not create repeated charts
-                    result['plot-id'] = "epiviz-" + elementId;
+                    result['plot-id'] = customScatterPlot.getAttribute('plot-id');
                     iconElement.setAttribute("id", "icon-" + result['plot-id']);
-                    $("#navHeader").append(customScatterPlot);
 
                 }
                 // two block data, add a block overlapping track
