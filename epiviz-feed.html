@@ -41,6 +41,8 @@
 <link rel="import" href="bower_components/paper-item/paper-item.html">
 <link rel="import" href="bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+
 
 <link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="bower_components/paper-spinner/paper-spinner-lite.html">
@@ -205,6 +207,7 @@
 
             app-drawer {
                 --app-drawer-scrim-background: none;
+
                 --app-drawer-content-container: {
                     background-color: #e6ecf0;
                 }
@@ -336,15 +339,19 @@
             }
         </style>
 
-        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket> -->
-        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket>
+        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket> -->
+
+        <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api" params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
+            handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">
+        </iron-ajax>
 
         <app-header-layout fullbleed>
 
             <app-header id="header" class="paper-header" slot="header" fixed>
-                <iron-label>EPIVIZ COMPUTE || Gene:[[gene]]</iron-label>
+                <iron-label>EPIVIZ COMPUTE || Gene : <a target="_blank" href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=[[gene]]">[[gene]]</a></iron-label>
                 <a href="http://epiviz.github.io" target="_blank" hidden$={{noLogo}}>
                     <!-- <img id="logo" src="epiviz_4_logo_medium.png" alt="Epiviz" width="100" height="21"> -->
                 </a>
@@ -379,6 +386,7 @@
                                 <div class="flexchild" hidden$="{{hideChrInput}}" on-mouseover="locationHovered" on-mouseout="locationUnhovered">
                                     <paper-input id="textRange" value="{{_strRange]]" label="Chromosome Location" on-change="_updateStrRange"></paper-input>
                                 </div> -->
+
                             <div class="flexchild" hidden$="{{hideSearch}}">
                                 <iron-label style="font-size: 12pt;">
                                     Enter Gene Symbol:
@@ -411,7 +419,8 @@
                                     <iron-icon icon="icons:trending-up"></iron-icon>
                                     Feed Results
                                     <paper-dropdown-menu class="group-dropdown-menu" label="GroupBy">
-                                        <paper-listbox slot="dropdown-content" selected="{{groupByMethod}}" attr-for-selected="label" on-selected-changed="groupByChanged">
+                                        <paper-listbox slot="dropdown-content" selected="{{groupByMethod}}"
+                                            attr-for-selected="label" on-selected-changed="groupByChanged">
                                             <paper-item label="Computation">Computation
                                             </paper-item>
                                             <!--<paper-item label="Tissue Type">Tissue-->
@@ -424,8 +433,9 @@
                                         </paper-listbox>
                                     </paper-dropdown-menu>
                                 </h2>
-                                <paper-search-panel search="{{searchString}}" count="5" items="{{results}}" hide-filter-button="True" on-search="searchQuery"
-                                    no-results-text="" on-search-changed="searchQuery">
+                                <paper-search-panel search="{{searchString}}" count="5" items="{{results}}"
+                                    hide-filter-button="True" on-search="searchQuery" no-results-text=""
+                                    on-search-changed="searchQuery">
                                 </paper-search-panel>
                             </div>
                             <div id="feed-results" class="overflow-y">
@@ -433,7 +443,8 @@
 
                                 </paper-spinner-lite>
                                 <template is="dom-repeat" items="{{filteredResultsByType}}">
-                                    <paper-button id="trigger-[[_sanitizeId(item.type)]]" class="trigger show-hide-button" on-click="groupToggle" aria-expanded$="[[opened]]">
+                                    <paper-button id="trigger-[[_sanitizeId(item.type)]]" class="trigger show-hide-button"
+                                        on-click="groupToggle" aria-expanded$="[[opened]]">
                                         <iron-icon icon="icons:menu"></iron-icon>
                                         [[item.type]]
                                     </paper-button>
@@ -444,7 +455,8 @@
                                                     <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
                                                     </iron-icon>
 
-                                                    <h3>The [[feedItem.computation-type]] between [[feedItem.data-type-one]]
+                                                    <h3>The [[feedItem.computation-type]] between
+                                                        [[feedItem.data-type-one]]
                                                         <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
                                                         and [[feedItem.data-type-two]]
                                                         <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
@@ -508,17 +520,14 @@
                     },
                     chr: {
                         type: String,
-                        value: "chr11",
                         notify: true
                     },
                     start: {
                         type: Number,
-                        value: 3947153,
                         notify: true
                     },
                     end: {
                         type: Number,
-                        value: 7164991,
                         notify: true
                     },
                     seqID: {
@@ -541,11 +550,18 @@
                 document.addEventListener('epivizchartdeleted', function (e) {
                     console.log("event listener!");
                 });
+
+                this.$.addChart._parentContainer = this;
             }
 
             static get observers() {
                 return [];
                 // return ['_rangeChanged(chr, start, end)'];
+            }
+
+            RandomGeneResponse(e) {
+                var resp = e.detail.response;
+                this.gene = resp.data[0].gene;
             }
 
             _rangeChanged(chr, start, end) {
