@@ -83,6 +83,18 @@
                 display: block;
             }
 
+            .show-more-button {
+                padding: 3px;
+                /* background-color: #e6ecf0; */
+                /* border: 1px solid #dedede; */
+                border-radius: 5px;
+                font-size: 12px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+                text-align: center;
+                display: block;
+            }
+
             :host([opened]) .trigger {
                 border-bottom-left-radius: 0;
                 border-bottom-right-radius: 0;
@@ -372,22 +384,9 @@
             <app-drawer-layout id="feed-drawer-layout">
 
                 <div class="content">
-                    <!-- <div hidden$="{{!collapsed}}"> -->
-                    <!-- <epiviz-ideogram-track hidden$="{{!collapsed}}" gene-in-range="{{geneInRange}}" id="navTrack" chromosome="{{chr}}" start="{{start}}"
-                            end="{{end}}"></epiviz-ideogram-track> -->
-                    <!-- </div> -->
 
                     <iron-collapse id="navHeader" hidden$="{{collapsed}}" opened>
                         <div class="container flex" id="{{_headerName}}">
-                            <!-- <div class="flexchild" hidden$="{{hideNav}}">
-                                    <paper-icon-button title="move left" icon="icons:chevron-left" on-click="moveLeft"></paper-icon-button>
-                                    <paper-icon-button title="move right" icon="icons:chevron-right" on-click="moveRight"></paper-icon-button>
-                                    <paper-icon-button title="zoom out" icon="icons:zoom-out" on-click="zoomOut"></paper-icon-button>
-                                    <paper-icon-button title="zoom in" icon="icons:zoom-in" on-click="zoomIn"></paper-icon-button>
-                                </div>
-                                <div class="flexchild" hidden$="{{hideChrInput}}" on-mouseover="locationHovered" on-mouseout="locationUnhovered">
-                                    <paper-input id="textRange" value="{{_strRange]]" label="Chromosome Location" on-change="_updateStrRange"></paper-input>
-                                </div> -->
 
                             <div class="flexchild" hidden$="{{hideSearch}}">
                                 <iron-label style="font-size: 12pt;">
@@ -449,7 +448,7 @@
                                     </paper-button>
                                     <iron-collapse id="collapse-[[_sanitizeId(item.type)]]" opened="opened">
                                         <div class="grouped-list">
-                                            <template is="dom-repeat" items="{{item.list}}" as="feedItem">
+                                            <template is="dom-repeat" items="{{item.showList}}" as="feedItem">
                                                 <paper-card>
                                                     <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
                                                     </iron-icon>
@@ -465,6 +464,30 @@
 
                                                 </paper-card>
                                             </template>
+
+                                            <iron-collapse id="showMore-[[_sanitizeId(item.type)]]">
+                                                <template is="dom-repeat" items="{{item.showMore}}" as="feedItem">
+                                                    <paper-card>
+                                                        <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
+                                                        </iron-icon>
+
+                                                        <h3>The [[feedItem.computation-type]] between
+                                                            <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                            and
+                                                            <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                            is
+                                                            <b>[[feedItem.value]]</b> (p-value =
+                                                            <i>[[feedItem.pvalue]])</i>.
+                                                        </h3>
+
+                                                    </paper-card>
+                                                </template>
+                                            </iron-collapse>
+
+                                            <paper-button id="showMore-button-[[_sanitizeId(item.type)]]" class="trigger show-more-button" on-click="toggleShowMore"
+                                                aria-expanded$="false" hidden$="[[_shouldShowMore(item.showMore)]]">
+                                                Show More ...
+                                            </paper-button>
                                         </div>
                                     </iron-collapse>
                                 </template>
@@ -515,6 +538,11 @@
                     opened: {
                         type: Boolean,
                         reflectToAttribute: true
+                    },
+                    shouldShowMore: {
+                        type: Boolean,
+                        value: true,
+                        notify: true
                     },
                     chr: {
                         type: String,
@@ -633,8 +661,7 @@
                     // polymer array override dirty checking
                     this.filteredResults = this._groupByResults(this.results,
                         this.groupByMethod);
-                    this.filteredResultsByType =
-                        this._toTypeArray(this.filteredResults);
+
                     this.set("filteredResultsByType", []);
                     this.set("filteredResultsByType", this._toTypeArray(this.filteredResults));
 
@@ -966,6 +993,18 @@
                 this.shadowRoot.querySelector("#collapse-" + this._sanitizeId(e.model.item.type)).toggle();
             }
 
+            toggleShowMore(e) {
+                var collapse_item = this.shadowRoot.querySelector("#showMore-" + this._sanitizeId(e.model.item.type));
+                collapse_item.toggle();
+
+                var collapse_button = this.shadowRoot.querySelector("#showMore-button-" + this._sanitizeId(e.model.item.type));
+
+                collapse_button.setAttribute('aria-expanded', collapse_item.opened);
+
+                collapse_button.textContent = collapse_item.opened ? "Collapse" : "Show More ...";
+
+            }
+
             _getMappingKey(type_one, type_two, comp_type, r) {
                 var possible_key_one = comp_type + "-" + type_one + "-" + type_two;
                 var possible_key_two = comp_type + "-" + type_two + "-" + type_one;
@@ -980,6 +1019,7 @@
             }
 
             _toTypeArray(resultsByType) {
+                var self = this;
                 if (resultsByType
                     != undefined && Object.keys(resultsByType).length >
                     0) {
@@ -988,9 +1028,14 @@
                             || resultsByType[key].length == 0) {
                             return;
                         }
+
+                        if (resultsByType[key].length < 4) {
+                            self.shouldShowMore = false;
+                        }
                         return {
                             type: key,
-                            list: resultsByType[key]
+                            showList: resultsByType[key].slice(0, 3),
+                            showMore: resultsByType[key].slice(3)
                         };
                     });
                 } else {
@@ -1043,10 +1088,13 @@
                 return compTypeNoSpace;
             }
 
-            // _sanitizeName(computationType) {
-            //     var compTypeNoSpace = computationType.replace("-", " ");
-            //     return compTypeNoSpace;
-            // }
+            _shouldShowMore(showMoreList) {
+                if (showMoreList.length == 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
 
             getDescription(results) {
                 results.forEach(function (result) {
