@@ -546,6 +546,13 @@
             connectedCallback() {
                 super.connectedCallback();
                 document.addEventListener('epivizchartdeleted', function (e) {
+                    var plotId = e.detail.id;
+                    var iconId = "icon-" + plotId;
+                    var feedItemElement = this.querySelector('epiviz-feed').shadowRoot.getElementById(iconId);
+                    feedItemElement.setAttribute("icon",
+                        "image:add-to-photos");
+                    feedItemElement.setAttribute("style", "");
+                    feedItemElement.setAttribute("id", "");
                     console.log("event listener!");
                 });
 
