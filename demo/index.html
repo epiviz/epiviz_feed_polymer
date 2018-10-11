@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>epiviz-barplot</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js" integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU="
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="import" href="../bower_components/epiviz-charts/epiviz-charts.html">
+    <link rel="import" href="../epiviz-barplot.html">
+
+</head>
+
+<body>
+    <h3>epiviz-barplot Demo</h3>
+    <epiviz-barplot style="height:300px; width:500px;" dim-s='["value", "type"]' data='[{
+        "type": "lung_tumor",
+        "value": 0.8
+    },{
+        "type": "lung_normal",
+        "value": 0.5
+    }]'
+        title="ttest between lung normal and tumor"></epiviz-barplot>
+</body>
+
+</html>

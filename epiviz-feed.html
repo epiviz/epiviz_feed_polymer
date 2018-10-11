@@ -707,10 +707,11 @@
                         result['data-type-two'] == 'methylation diff') ||
                     (result['data-type-one'] == 'methylation diff' &&
                         result['data-type-two'] == 'expression diff')) {
-                    var dims = [result['data-type-one'] + '_' +
-                        result['attribute-one'],
-                    result['data-type-two'] + '_'
-                    + result['attribute-two']];
+                    // var dims = [result['data-type-one'] + '_' +
+                    //     result['attribute-one'],
+                    // result['data-type-two'] + '_'
+                    // + result['attribute-two']];
+                    var dims = [result['attribute-one'], result['attribute-two']];
                     var data = result['data'];
 
                     var elementId = this._generateId();
@@ -723,33 +724,7 @@
                     customScatterPlot.setAttribute('class',
                         "computation-chart");
 
-                    customScatterPlot.slot = 'charts';
-
-                    chartsContainer.appendChild(customScatterPlot);
-
-                    // record the plot-id to scroll to the right position when
-                    // click to add the chart, so do not create repeated charts
-                    result['plot-id'] = customScatterPlot.getAttribute('plot-id');
-                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
-
-                    // add titles
-                    var settings =
-                        JSON.parse(JSON.stringify(customScatterPlot.chart._customSettingsValues));
-                    settings.title = result['title'];
-                    var domElem =
-                        chartsContainer.querySelector('[plot-id$="' +
-                            result['plot-id'] +
-                            '"]');
-
-                    domElem.setAttribute("chart-settings",
-                        JSON.stringify(settings));
-
-                    setTimeout(function () {
-                        domElem.scrollIntoView();
-                        $(domElem).effect("highlight", {
-                            color: '#e6ecf0b'
-                        }, 1000);
-                    }, 100);
+                    this._configChart(customScatterPlot, iconElement, chartsContainer, result);
 
                 }
                 // two block data, add a block overlapping track
@@ -766,31 +741,8 @@
                     block_element.setAttribute('class',
                         "computation-chart");
 
-                    block_element.slot = 'charts';
-                    chartsContainer.appendChild(block_element);
+                    this._configChart(block_element, iconElement, chartsContainer, result);
 
-                    // record the plot-id to scroll to the right position when
-                    // click to add the chart, so do not create repeated charts
-                    result['plot-id'] = block_element.getAttribute('plot-id');
-                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
-
-                    var settings =
-                        JSON.parse(JSON.stringify(block_element.chart._customSettingsValues));
-                    settings.title = result['title'];
-                    var domElem =
-                        chartsContainer.querySelector('[plot-id$="' +
-                            result['plot-id'] +
-                            '"]');
-
-                    domElem.setAttribute("chart-settings",
-                        JSON.stringify(settings));
-
-                    setTimeout(function () {
-                        domElem.scrollIntoView();
-                        $(domElem).effect("highlight", {
-                            color: '#e6ecf0b'
-                        }, 1000);
-                    }, 100);
                 } else if ((result['data-type-one'] == 'block' &&
                     result['data-type-two'] == 'expression') || (result['data-type-one'] == 'expression' &&
                         result['data-type-two'] == 'block')) {
@@ -800,10 +752,6 @@
 
                     var elementId = this._generateId();
 
-                    // test_measure[0]['type'] = 'range';
-                    // test_measure[1]['type'] = 'range';
-                    // test_measure[0]['metadata'] = null;
-                    // test_measure[1]['metadata'] = null;
                     var box_element =
                         document.createElement('epiviz-json-box-plot');
                     box_element.setAttribute('measurements',
@@ -813,65 +761,60 @@
                     box_element.setAttribute('class',
                         "computation-chart");
 
-                    box_element.slot = 'charts';
-                    chartsContainer.appendChild(box_element);
+                    this._configChart(box_element, iconElement, chartsContainer, result);
 
-                    // record the plot-id to scroll to the right position when
-                    // click to add the chart, so do not create repeated charts
-                    result['plot-id'] = box_element.getAttribute('plot-id');
-                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
-
-                    var settings =
-                        JSON.parse(JSON.stringify(box_element.chart._customSettingsValues));
-                    settings.title = result['title'];
-                    var domElem =
-                        chartsContainer.querySelector('[plot-id$="' +
-                            result['plot-id'] +
-                            '"]');
-
-                    domElem.setAttribute("chart-settings",
-                        JSON.stringify(settings));
-                    setTimeout(function () {
-                        domElem.scrollIntoView();
-                        $(domElem).effect("highlight", {
-                            color: '#e6ecf0b'
-                        }, 1000);
-                    }, 100);
                 } else {
                     var element = document.createElement('epiviz-scatter-plot');
                     element.setAttribute('measurements',
                         JSON.stringify(test_measure));
                     element.setAttribute('class',
                         "computation-chart");
-                    element.slot = 'charts';
-                    chartsContainer.appendChild(element);
 
-                    // record the plot-id to scroll to the right position when
-                    // click to add the chart, so do not create repeated charts
-                    result['plot-id'] = element.getAttribute('plot-id');
-                    iconElement.setAttribute("id", "icon-" + result['plot-id']);
+                    this._configChart(element, iconElement, chartsContainer, result);
 
-                    // add titles
-                    var settings =
-                        JSON.parse(JSON.stringify(element.chart._customSettingsValues));
-                    settings.title = result['title'];
-                    var domElem =
-                        chartsContainer.querySelector('[plot-id$="' +
-                            result['plot-id'] +
-                            '"]');
-
-                    domElem.setAttribute("chart-settings",
-                        JSON.stringify(settings));
-
-                    setTimeout(function () {
-                        domElem.scrollIntoView();
-                        $(domElem).effect("highlight", {
-                            color: '#e6ecf0b'
-                        }, 1000);
-                    }, 100);
                 }
                 iconElement.setAttribute("icon", "image:collections-bookmark");
                 iconElement.setAttribute("style", "color: #3284FF");
+            }
+
+            _configChart(newChartElement, iconElement, chartsContainer, result) {
+                newChartElement.slot = 'charts';
+
+                chartsContainer.appendChild(newChartElement);
+
+                // record the plot-id to scroll to the right position when
+                // click to add the chart, so do not create repeated charts
+                result['plot-id'] = newChartElement.getAttribute('plot-id');
+                iconElement.setAttribute("id", "icon-" + result['plot-id']);
+
+                // set the id of feed item (paper-card), also the parent element of iconElement
+                iconElement.parentElement.setAttribute("id", "feed-item-" + result['plot-id']);
+
+                // add titles
+                var settings =
+                    JSON.parse(JSON.stringify(newChartElement.chart._customSettingsValues));
+                settings.title = result['title'];
+                var domElem =
+                    chartsContainer.querySelector('[plot-id$="' +
+                        result['plot-id'] +
+                        '"]');
+
+                domElem.setAttribute("chart-settings",
+                    JSON.stringify(settings));
+
+                setTimeout(function () {
+                    domElem.scrollIntoView();
+                    $(domElem).effect("highlight", {
+                        color: '#e6ecf0b'
+                    }, 1000);
+                }, 100);
+
+                var titleElem = domElem.shadowRoot.querySelector(".visualization-title");
+
+                var self = this;
+                titleElem.addEventListener("click", function () {
+                    self._scrollFeedView(result['plot-id']);
+                });
             }
 
             drawerToggleClicked() {
@@ -1076,9 +1019,13 @@
                 feedItemElement.setAttribute("id", "");
             }
 
-            _scrollIntoView(domElement) {
-                domElement.scrollIntoView();
-                $(domElement).effect("highlight", {
+            _scrollFeedView(plotId) {
+
+                var resultsContainer = this.shadowRoot.querySelector('#feed-results');
+
+                var feedItemElement = resultsContainer.querySelector("#feed-item-" + plotId);
+                feedItemElement.scrollIntoView();
+                $(feedItemElement).effect("highlight", {
                     color: '#e6ecf0b'
                 }, 2000);
             }
