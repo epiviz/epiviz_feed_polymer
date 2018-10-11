@@ -1,0 +1,185 @@
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+
+<!-- Epiviz Polymer Behaviors dependency -->
+<!-- <link rel="import" href="bower_components/epiviz-charts/chart-behavior.html">
+<link rel="import" href="bower_components/epiviz-charts/chart-settings.html">
+<link rel="import" href="bower_components/epiviz-charts/chart-colors.html">
+<link rel="import" href="bower_components/epiviz-charts/chart-remove.html">
+<link rel="import" href="bower_components/epiviz-charts/chart-grid-behavior.html"> -->
+
+<!-- Epiviz Shared css -->
+<link rel="import" href="bower_components/epiviz-charts/chart-shared-css.html">
+
+<dom-module id="epiviz-barplot">
+    <template>
+        <style include="shared-settings"></style>
+        <style include="chart-shared-css"></style>
+        <style>
+            :host {
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                display: inline-block;
+                border: 1px solid black;
+                border-radius: 5px;
+                transition: width 0.01s, height 0.01s;
+                resize: vertical;
+                overflow: auto;
+                position: relative;
+            }
+
+            .bar {
+                fill: steelblue;
+            }
+
+            .axis text {
+                font: 10px sans-serif;
+            }
+
+            .axis path,
+            .axis line {
+                fill: none;
+                stroke: #000;
+                shape-rendering: crispEdges;
+            }
+
+            .x.axis path {
+                display: none;
+            }
+
+            .title {
+                text-align: center
+            }
+        </style>
+
+        <!-- local DOM goes here -->
+        <div class="title">
+            <p>[[title]]</p>
+        </div>
+        <svg id="chart"></svg>
+        <!-- <div id="chart">
+        </div> -->
+    </template>
+    <script>
+        class EpivizBarPlot extends Polymer.Element {
+            static get is() { return 'epiviz-barplot'; }
+
+            static get properties() {
+                return {
+                    data: {
+                        type: Array,
+                        observer: "_dataChanged"
+                    },
+                    dimS: Array,
+                    title: String
+                }
+            }
+
+            static get observers() {
+                return [];
+            }
+
+            constructor() {
+                super();
+            }
+
+            connectedCallback() {
+                super.connectedCallback();
+            }
+
+            disconnectedCallback() {
+                super.connectedCallback();
+            }
+
+            ready() {
+                super.ready();
+                var self = this;
+
+                self.plotId = self.plotId || self._generatePlotId();
+                var parent = self.parentNode;
+            }
+
+            _dataChanged(newD, oldD) {
+                this._draw();
+            }
+
+            /**
+             * Draws the chart.
+             */
+            _draw() {
+
+                var self = this;
+
+                $(self.shadowRoot.querySelector("#chart")).empty();
+
+                var dimX = self.dimS[0];
+                var dimY = self.dimS[1];
+
+                var margin = { top: 20, right: 30, bottom: 30, left: 80 },
+                    width = self.offsetWidth - margin.left - margin.right - 50,
+                    height = self.offsetHeight - margin.top - margin.bottom - 75;
+
+                var x = d3.scale.linear()
+                    .range([0, width]);
+
+                var y = d3.scale.ordinal()
+                    .rangeRoundBands([height, 0], .1);
+
+                var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom");
+
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left");
+
+                var chart = d3.select(self.shadowRoot.querySelector("#chart"))
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                x.domain([0, 1]);
+                y.domain(self.data.map(function (d) { return d[dimY]; }));
+
+                chart.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis);
+
+                chart.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis);
+
+                var bars = chart.selectAll(".bar")
+                    .data(self.data)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", function (d) { return x(d[dimX]); })
+                    .attr("y", function (d) { return y(d[dimY]); })
+                    .attr("width", function (d) { return width - x(d[dimX]); })
+                    .attr("height", y.rangeBand());
+            }
+
+            /**
+             * Generates a unique chart ID
+             * 
+             * @return {string}
+             */
+            _generatePlotId() {
+                var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                var result = '';
+                var size = 7;
+
+                for (var i = 0; i < size; ++i) {
+                    result += chars[Math.round(Math.random() * (chars.length - 1))];
+                }
+
+                return 'epiviz-' + result;
+            }
+        };
+
+        customElements.define(EpivizBarPlot.is, EpivizBarPlot);
+
+    </script>
+</dom-module>
