@@ -25,6 +25,17 @@
         "value": 0.5
     }]'
         title="ttest between lung normal and tumor"></epiviz-barplot>
+
+    <epiviz-navigation>
+        <epiviz-barplot slot="charts" dim-s='["value", "type"]' data='[{
+            "type": "lung_tumor",
+            "value": 0.8
+        },{
+            "type": "lung_normal",
+            "value": 0.5
+        }]'
+            title="ttest between lung normal and tumor"></epiviz-barplot>
+    </epiviz-navigation>
 </body>
 
 </html>

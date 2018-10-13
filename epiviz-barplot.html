@@ -1,11 +1,11 @@
 <link rel="import" href="bower_components/polymer/polymer-element.html">
 
 <!-- Epiviz Polymer Behaviors dependency -->
-<!-- <link rel="import" href="bower_components/epiviz-charts/chart-behavior.html">
+<link rel="import" href="bower_components/epiviz-charts/chart-behavior.html">
 <link rel="import" href="bower_components/epiviz-charts/chart-settings.html">
 <link rel="import" href="bower_components/epiviz-charts/chart-colors.html">
 <link rel="import" href="bower_components/epiviz-charts/chart-remove.html">
-<link rel="import" href="bower_components/epiviz-charts/chart-grid-behavior.html"> -->
+<link rel="import" href="bower_components/epiviz-charts/chart-grid-behavior.html">
 
 <!-- Epiviz Shared css -->
 <link rel="import" href="bower_components/epiviz-charts/chart-shared-css.html">
@@ -53,15 +53,16 @@
         </style>
 
         <!-- local DOM goes here -->
-        <div class="title">
-            <p>[[title]]</p>
+        <div id="chart" on-drag="hostDragged" on-mouseover="hostHovered" on-mouseout="hostUnhovered">
+            <slot name="dragHandle"></slot>
+            <p class="title">[[title]]</p>
+            <div id="{{plotId}}">
+                <svg id="svg"></svg>
+            </div>
         </div>
-        <svg id="chart"></svg>
-        <!-- <div id="chart">
-        </div> -->
     </template>
     <script>
-        class EpivizBarPlot extends Polymer.Element {
+        class EpivizBarPlot extends EpivizChartGridBehavior(EpivizChartRemoveBehavior(EpivizChartColorsBehavior(EpivizChartSettingsBehavior(EpivizChartBehavior(Polymer.Element))))) {
             static get is() { return 'epiviz-barplot'; }
 
             static get properties() {
@@ -85,21 +86,32 @@
 
             connectedCallback() {
                 super.connectedCallback();
+
+                var self = this;
+
+                self._initializeSettingsContainer();
+                // self._initializeSettingsDialog();
+                // self._initializeColorsDialog();
+                self._initializeRemoveDialog();
+                self._initializeResizeButtons();
+                self._initializeGrid();
+                self._measurementsChanged();
             }
 
             disconnectedCallback() {
-                super.connectedCallback();
+                super.disconnectedCallback();
             }
 
             ready() {
                 super.ready();
-                var self = this;
-
-                self.plotId = self.plotId || self._generatePlotId();
-                var parent = self.parentNode;
+                this.plotId = this.plotId || this._generatePlotId();
             }
 
             _dataChanged(newD, oldD) {
+                this._draw();
+            }
+
+            _onResize(e) {
                 this._draw();
             }
 
@@ -110,7 +122,7 @@
 
                 var self = this;
 
-                $(self.shadowRoot.querySelector("#chart")).empty();
+                $(self.shadowRoot.querySelector("#svg")).empty();
 
                 var dimX = self.dimS[0];
                 var dimY = self.dimS[1];
@@ -133,7 +145,7 @@
                     .scale(y)
                     .orient("left");
 
-                var chart = d3.select(self.shadowRoot.querySelector("#chart"))
+                var chart = d3.select(self.shadowRoot.querySelector("#svg"))
                     .attr("width", width + margin.left + margin.right)
                     .attr("height", height + margin.top + margin.bottom)
                     .append("g")
@@ -155,27 +167,14 @@
                     .data(self.data)
                     .enter().append("rect")
                     .attr("class", "bar")
-                    .attr("x", function (d) { return x(d[dimX]); })
+                    .attr("x", function (d) { return x(0); })
                     .attr("y", function (d) { return y(d[dimY]); })
-                    .attr("width", function (d) { return width - x(d[dimX]); })
+                    .attr("width", function (d) { return x(d[dimX]); })
                     .attr("height", y.rangeBand());
             }
 
-            /**
-             * Generates a unique chart ID
-             * 
-             * @return {string}
-             */
-            _generatePlotId() {
-                var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                var result = '';
-                var size = 7;
-
-                for (var i = 0; i < size; ++i) {
-                    result += chars[Math.round(Math.random() * (chars.length - 1))];
-                }
-
-                return 'epiviz-' + result;
+            _createChart() {
+                return null;
             }
         };
 
