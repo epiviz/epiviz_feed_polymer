@@ -18,6 +18,8 @@
 <link rel="import" href="bower_components/epiviz-charts/epiviz-genes-track.html">
 <link rel="import" href="bower_components/epiviz-charts/epiviz-ideogram-track.html">
 <link rel="import" href="bower_components/epiviz-charts/epiviz-json-box-plot.html">
+<!-- Bar Plot dependency-->
+<link rel="import" href="demo/index.html">
 
 <!-- Polymer Behavior dependency -->
 <link rel="import" href="bower_components/iron-fit-behavior/iron-fit-behavior.html">
@@ -77,6 +79,18 @@
                 border: 1px solid #dedede;
                 border-radius: 5px;
                 font-size: 16px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+                text-align: center;
+                display: block;
+            }
+
+            .show-more-button {
+                padding: 3px;
+                /* background-color: #e6ecf0; */
+                /* border: 1px solid #dedede; */
+                border-radius: 5px;
+                font-size: 12px;
                 cursor: pointer;
                 -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
                 text-align: center;
@@ -162,19 +176,6 @@
                 font-size: 12px;
                 line-height: 18px;
                 cursor: pointer;
-            }
-
-            .feed-element-container {
-                background-color: #fff;
-                /*border-style: groove;*/
-                cursor: pointer;
-                border-bottom: 2px solid #e6ecf0;
-                padding: 3px;
-            }
-
-            .feed-element-container.selected {
-                outline: 0;
-                background-color: #ddd;
             }
 
             .feed-show-hide {
@@ -350,7 +351,9 @@
         <app-header-layout fullbleed="">
 
             <app-header id="header" class="paper-header" slot="header" fixed="">
-                <iron-label>EPIVIZ COMPUTE || Gene : <a target="_blank" href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=[[gene]]">[[gene]]</a></iron-label>
+                <iron-label>EPIVIZ COMPUTE || Gene :
+                    <a target="_blank" href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=[[gene]]">[[gene]]</a>
+                </iron-label>
                 <a href="http://epiviz.github.io" target="_blank" hidden$="{{noLogo}}">
                     <!-- <img id="logo" src="epiviz_4_logo_medium.png" alt="Epiviz" width="100" height="21"> -->
                 </a>
@@ -358,33 +361,16 @@
                     <epiviz-add-chart id="addChart"></epiviz-add-chart>
                 </div>
                 <paper-menu-button dynamic-align="" vertical-align="bottom" vertical-offset="24">
-                    <paper-icon-button icon="menu" slot="dropdown-trigger" on-click="drawerToggleClicked"></paper-icon-button>
-                    <!-- <paper-listbox slot="dropdown-content">
-                    <paper-item toggles on-click="toggleSelected">Delete</paper-item>
-                    <paper-item on-click="cloneNavigation">Clone</paper-item>
-                    <paper-item on-click="toggleHeader">{{_toggleText}}</paper-item>
-                </paper-listbox> -->
+                    <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked"></paper-icon-button>
+
                 </paper-menu-button>
             </app-header>
             <app-drawer-layout id="feed-drawer-layout">
 
                 <div class="content">
-                    <!-- <div hidden$="{{!collapsed}}"> -->
-                    <!-- <epiviz-ideogram-track hidden$="{{!collapsed}}" gene-in-range="{{geneInRange}}" id="navTrack" chromosome="{{chr}}" start="{{start}}"
-                            end="{{end}}"></epiviz-ideogram-track> -->
-                    <!-- </div> -->
 
                     <iron-collapse id="navHeader" hidden$="{{collapsed}}" opened="">
                         <div class="container flex" id="{{_headerName}}">
-                            <!-- <div class="flexchild" hidden$="{{hideNav}}">
-                                    <paper-icon-button title="move left" icon="icons:chevron-left" on-click="moveLeft"></paper-icon-button>
-                                    <paper-icon-button title="move right" icon="icons:chevron-right" on-click="moveRight"></paper-icon-button>
-                                    <paper-icon-button title="zoom out" icon="icons:zoom-out" on-click="zoomOut"></paper-icon-button>
-                                    <paper-icon-button title="zoom in" icon="icons:zoom-in" on-click="zoomIn"></paper-icon-button>
-                                </div>
-                                <div class="flexchild" hidden$="{{hideChrInput}}" on-mouseover="locationHovered" on-mouseout="locationUnhovered">
-                                    <paper-input id="textRange" value="{{_strRange]]" label="Chromosome Location" on-change="_updateStrRange"></paper-input>
-                                </div> -->
 
                             <div class="flexchild" hidden$="{{hideSearch}}">
                                 <iron-label style="font-size: 12pt;">
@@ -411,7 +397,7 @@
                 </div>
 
                 <app-drawer id="drawer" slot="drawer" align="right" opened="" swipe-open="">
-                    <div id="feed-container" class="feed-pane-container">
+                    <div id="feed-container" class="feed-pane-container overflow-y">
                         <div class="pane feed-pane">
                             <div class="feed-header arial-sans-font">
                                 <h2>
@@ -434,7 +420,7 @@
                                 <paper-search-panel search="{{searchString}}" count="5" items="{{results}}" hide-filter-button="True" on-search="searchQuery" no-results-text="" on-search-changed="searchQuery">
                                 </paper-search-panel>
                             </div>
-                            <div id="feed-results" class="overflow-y">
+                            <div id="feed-results">
                                 <paper-spinner-lite id="loadingSpinner" active="" class="blue">
 
                                 </paper-spinner-lite>
@@ -445,23 +431,45 @@
                                     </paper-button>
                                     <iron-collapse id="collapse-[[_sanitizeId(item.type)]]" opened="opened">
                                         <div class="grouped-list">
-                                            <template is="dom-repeat" items="{{item.list}}" as="feedItem">
+                                            <template is="dom-repeat" items="{{item.showList}}" as="feedItem">
                                                 <paper-card>
                                                     <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
                                                     </iron-icon>
 
                                                     <h3>The [[feedItem.computation-type]] between
-                                                        [[feedItem.data-type-one]]
                                                         <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
-                                                        and [[feedItem.data-type-two]]
+                                                        and
                                                         <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
                                                         is
-                                                        <b>[[feedItem.value]]</b>. The p-value is
-                                                        <i>[[feedItem.pvalue]]</i>.
+                                                        <b>[[feedItem.value]]</b> (p-value =
+                                                        <i>[[feedItem.pvalue]])</i>.
                                                     </h3>
 
                                                 </paper-card>
                                             </template>
+
+                                            <iron-collapse id="showMore-[[_sanitizeId(item.type)]]">
+                                                <template is="dom-repeat" items="{{item.showMore}}" as="feedItem">
+                                                    <paper-card>
+                                                        <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
+                                                        </iron-icon>
+
+                                                        <h3>The [[feedItem.computation-type]] between
+                                                            <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                            and
+                                                            <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                            is
+                                                            <b>[[feedItem.value]]</b> (p-value =
+                                                            <i>[[feedItem.pvalue]])</i>.
+                                                        </h3>
+
+                                                    </paper-card>
+                                                </template>
+                                            </iron-collapse>
+
+                                            <paper-button id="showMore-button-[[_sanitizeId(item.type)]]" class="trigger show-more-button" on-click="toggleShowMore" aria-expanded$="false" hidden$="[[_shouldShowMore(item.showMore)]]">
+                                                Show More ...
+                                            </paper-button>
                                         </div>
                                     </iron-collapse>
                                 </template>
@@ -514,6 +522,11 @@
         type: Boolean,
         reflectToAttribute: true
       },
+      shouldShowMore: {
+        type: Boolean,
+        value: true,
+        notify: true
+      },
       chr: {
         type: String,
         notify: true
@@ -544,6 +557,12 @@
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener('epivizchartdeleted', function (e) {
+      var plotId = e.detail.id;
+      var iconId = "icon-" + plotId;
+      var feedItemElement = this.querySelector('epiviz-feed').shadowRoot.getElementById(iconId);
+      feedItemElement.setAttribute("icon", "image:add-to-photos");
+      feedItemElement.setAttribute("style", "");
+      feedItemElement.setAttribute("id", "");
       console.log("event listener!");
     });
     this.$.addChart._parentContainer = this;
@@ -575,7 +594,8 @@
       var seqData = {
         start: this.start,
         end: this.end,
-        chr: this.chr
+        chr: this.chr,
+        gene: this.gene
       }; // increase the counter to deal with multiple requests
 
       if (this.seqID == null) {
@@ -622,7 +642,6 @@
     if (this.results != null) {
       // polymer array override dirty checking
       this.filteredResults = this._groupByResults(this.results, this.groupByMethod);
-      this.filteredResultsByType = this._toTypeArray(this.filteredResults);
       this.set("filteredResultsByType", []);
       this.set("filteredResultsByType", this._toTypeArray(this.filteredResults));
       this.notifyPath('filteredResultsByType');
@@ -659,7 +678,11 @@
 
 
     if (result['data-type-one'] == 'methylation' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'methylation' || result['data-type-one'] == 'expression diff' && result['data-type-two'] == 'methylation diff' || result['data-type-one'] == 'methylation diff' && result['data-type-two'] == 'expression diff') {
-      var dims = [result['data-type-one'] + '_' + result['attribute-one'], result['data-type-two'] + '_' + result['attribute-two']];
+      // var dims = [result['data-type-one'] + '_' +
+      //     result['attribute-one'],
+      // result['data-type-two'] + '_'
+      // + result['attribute-two']];
+      var dims = [result['attribute-one'], result['attribute-two']];
       var data = result['data'];
 
       var elementId = this._generateId();
@@ -668,23 +691,8 @@
       customScatterPlot.setAttribute('json-data', JSON.stringify(data));
       customScatterPlot.setAttribute('dim-s', JSON.stringify(dims));
       customScatterPlot.setAttribute('class', "computation-chart");
-      customScatterPlot.slot = 'charts';
-      chartsContainer.appendChild(customScatterPlot); // record the plot-id to scroll to the right position when
-      // click to add the chart, so do not create repeated charts
 
-      result['plot-id'] = customScatterPlot.getAttribute('plot-id');
-      iconElement.setAttribute("id", "icon-" + result['plot-id']); // add titles
-
-      var settings = JSON.parse(JSON.stringify(customScatterPlot.chart._customSettingsValues));
-      settings.title = result['title'];
-      var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
-      domElem.setAttribute("chart-settings", JSON.stringify(settings));
-      setTimeout(function () {
-        domElem.scrollIntoView();
-        $(domElem).effect("highlight", {
-          color: '#e6ecf0b'
-        }, 1000);
-      }, 100);
+      this._configChart(customScatterPlot, iconElement, chartsContainer, result);
     } // two block data, add a block overlapping track
     else if (result['data-type-one'] == 'block' && result['data-type-two'] == 'block') {
         test_measure[0]['type'] = 'range';
@@ -694,77 +702,95 @@
         var block_element = document.createElement('epiviz-stacked-blocks-track');
         block_element.setAttribute('measurements', JSON.stringify(test_measure));
         block_element.setAttribute('class', "computation-chart");
-        block_element.slot = 'charts';
-        chartsContainer.appendChild(block_element); // record the plot-id to scroll to the right position when
-        // click to add the chart, so do not create repeated charts
 
-        result['plot-id'] = block_element.getAttribute('plot-id');
-        iconElement.setAttribute("id", "icon-" + result['plot-id']);
-        var settings = JSON.parse(JSON.stringify(block_element.chart._customSettingsValues));
-        settings.title = result['title'];
-        var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
-        domElem.setAttribute("chart-settings", JSON.stringify(settings));
-        setTimeout(function () {
-          domElem.scrollIntoView();
-          $(domElem).effect("highlight", {
-            color: '#e6ecf0b'
-          }, 1000);
-        }, 100);
+        this._configChart(block_element, iconElement, chartsContainer, result);
       } else if (result['data-type-one'] == 'block' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'block') {
         // t-test between block and expression, use boxplot
         var data = result['data'];
 
-        var elementId = this._generateId(); // test_measure[0]['type'] = 'range';
-        // test_measure[1]['type'] = 'range';
-        // test_measure[0]['metadata'] = null;
-        // test_measure[1]['metadata'] = null;
-
+        var elementId = this._generateId();
 
         var box_element = document.createElement('epiviz-json-box-plot');
         box_element.setAttribute('measurements', JSON.stringify(test_measure));
         box_element.setAttribute('data', JSON.stringify(data));
         box_element.setAttribute('class', "computation-chart");
-        box_element.slot = 'charts';
-        chartsContainer.appendChild(box_element); // record the plot-id to scroll to the right position when
-        // click to add the chart, so do not create repeated charts
 
-        result['plot-id'] = box_element.getAttribute('plot-id');
-        iconElement.setAttribute("id", "icon-" + result['plot-id']);
-        var settings = JSON.parse(JSON.stringify(box_element.chart._customSettingsValues));
-        settings.title = result['title'];
-        var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
-        domElem.setAttribute("chart-settings", JSON.stringify(settings));
-        setTimeout(function () {
-          domElem.scrollIntoView();
-          $(domElem).effect("highlight", {
-            color: '#e6ecf0b'
-          }, 1000);
-        }, 100);
+        this._configChart(box_element, iconElement, chartsContainer, result);
+      } else if (result['computation-type'] == 'per gene t-test') {
+        var barplot = document.createElement('epiviz-barplot'); // the order of dims matter!
+
+        var dims = ['value', 'type'];
+        var data = result['data'];
+        barplot.setAttribute('data', JSON.stringify(data));
+        barplot.setAttribute('dim-s', JSON.stringify(dims));
+        barplot.setAttribute('class', "computation-chart");
+
+        var elementId = this._generateId();
+
+        barplot.setAttribute('plot-id', elementId);
+        barplot.setAttribute('title', result['title']); // barplot.setAttribute('style', "height:300px; width:500px;");
+
+        this._configBarPlot(barplot, iconElement, chartsContainer, result);
       } else {
         var element = document.createElement('epiviz-scatter-plot');
         element.setAttribute('measurements', JSON.stringify(test_measure));
         element.setAttribute('class', "computation-chart");
-        element.slot = 'charts';
-        chartsContainer.appendChild(element); // record the plot-id to scroll to the right position when
-        // click to add the chart, so do not create repeated charts
 
-        result['plot-id'] = element.getAttribute('plot-id');
-        iconElement.setAttribute("id", "icon-" + result['plot-id']); // add titles
-
-        var settings = JSON.parse(JSON.stringify(element.chart._customSettingsValues));
-        settings.title = result['title'];
-        var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
-        domElem.setAttribute("chart-settings", JSON.stringify(settings));
-        setTimeout(function () {
-          domElem.scrollIntoView();
-          $(domElem).effect("highlight", {
-            color: '#e6ecf0b'
-          }, 1000);
-        }, 100);
+        this._configChart(element, iconElement, chartsContainer, result);
       }
 
     iconElement.setAttribute("icon", "image:collections-bookmark");
     iconElement.setAttribute("style", "color: #3284FF");
+  }
+
+  _configChart(newChartElement, iconElement, chartsContainer, result) {
+    newChartElement.slot = 'charts';
+    chartsContainer.appendChild(newChartElement); // record the plot-id to scroll to the right position when
+    // click to add the chart, so do not create repeated charts
+
+    result['plot-id'] = newChartElement.getAttribute('plot-id');
+    iconElement.setAttribute("id", "icon-" + result['plot-id']); // set the id of feed item (paper-card), also the parent element of iconElement
+
+    iconElement.parentElement.setAttribute("id", "feed-item-" + result['plot-id']); // add titles
+
+    var settings = JSON.parse(JSON.stringify(newChartElement.chart._customSettingsValues));
+    settings.title = result['title'];
+    var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
+    domElem.setAttribute("chart-settings", JSON.stringify(settings));
+    setTimeout(function () {
+      domElem.scrollIntoView();
+      $(domElem).effect("highlight", {
+        color: '#e6ecf0b'
+      }, 1000);
+    }, 100);
+    var titleElem = domElem.shadowRoot.querySelector(".visualization-title");
+    var self = this;
+    titleElem.addEventListener("click", function () {
+      self._scrollFeedView(result['plot-id']);
+    });
+  }
+
+  _configBarPlot(newChartElement, iconElement, chartsContainer, result) {
+    newChartElement.slot = 'charts';
+    chartsContainer.appendChild(newChartElement); // record the plot-id to scroll to the right position when
+    // click to add the chart, so do not create repeated charts
+
+    result['plot-id'] = newChartElement.getAttribute('plot-id');
+    iconElement.setAttribute("id", "icon-" + result['plot-id']); // set the id of feed item (paper-card), also the parent element of iconElement
+
+    iconElement.parentElement.setAttribute("id", "feed-item-" + result['plot-id']);
+    var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
+    setTimeout(function () {
+      domElem.scrollIntoView();
+      $(domElem).effect("highlight", {
+        color: '#e6ecf0b'
+      }, 1000);
+    }, 100);
+    var titleElem = domElem.shadowRoot.querySelector(".title");
+    var self = this;
+    titleElem.addEventListener("click", function () {
+      self._scrollFeedView(result['plot-id']);
+    });
   }
 
   drawerToggleClicked() {
@@ -883,6 +909,14 @@
     this.shadowRoot.querySelector("#collapse-" + this._sanitizeId(e.model.item.type)).toggle();
   }
 
+  toggleShowMore(e) {
+    var collapse_item = this.shadowRoot.querySelector("#showMore-" + this._sanitizeId(e.model.item.type));
+    collapse_item.toggle();
+    var collapse_button = this.shadowRoot.querySelector("#showMore-button-" + this._sanitizeId(e.model.item.type));
+    collapse_button.setAttribute('aria-expanded', collapse_item.opened);
+    collapse_button.textContent = collapse_item.opened ? "Collapse" : "Show More ...";
+  }
+
   _getMappingKey(type_one, type_two, comp_type, r) {
     var possible_key_one = comp_type + "-" + type_one + "-" + type_two;
     var possible_key_two = comp_type + "-" + type_two + "-" + type_one;
@@ -897,15 +931,22 @@
   }
 
   _toTypeArray(resultsByType) {
+    var self = this;
+
     if (resultsByType != undefined && Object.keys(resultsByType).length > 0) {
       return Object.keys(resultsByType).map(function (key) {
         if (resultsByType[key] == undefined || resultsByType[key].length == 0) {
           return;
         }
 
+        if (resultsByType[key].length < 4) {
+          self.shouldShowMore = false;
+        }
+
         return {
           type: key,
-          list: resultsByType[key]
+          showList: resultsByType[key].slice(0, 3),
+          showMore: resultsByType[key].slice(3)
         };
       });
     } else {
@@ -917,20 +958,9 @@
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-    for (var i = 0; i < 3; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
+    for (var i = 0; i < 6; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
 
-    return text;
-  }
-
-  _getIndexClass(result, isSelected) {
-    var classes = 'feed-element-container';
-    var test_measure = result['data-source']; // check whether there is chart already in the main visualization.
-
-    if (result['plot-id'] != null && this.shadowRoot.getElementById(result['plot-id']) != null || isSelected) {
-      classes += ' selected';
-    }
-
-    return classes;
+    return "epiviz-" + text;
   }
 
   chartDeleted(e) {
@@ -942,9 +972,11 @@
     feedItemElement.setAttribute("id", "");
   }
 
-  _scrollIntoView(domElement) {
-    domElement.scrollIntoView();
-    $(domElement).effect("highlight", {
+  _scrollFeedView(plotId) {
+    var resultsContainer = this.shadowRoot.querySelector('#feed-results');
+    var feedItemElement = resultsContainer.querySelector("#feed-item-" + plotId);
+    feedItemElement.scrollIntoView();
+    $(feedItemElement).effect("highlight", {
       color: '#e6ecf0b'
     }, 2000);
   }
@@ -952,11 +984,15 @@
   _sanitizeId(computationType) {
     var compTypeNoSpace = computationType.replace(/ /g, "-");
     return compTypeNoSpace;
-  } // _sanitizeName(computationType) {
-  //     var compTypeNoSpace = computationType.replace("-", " ");
-  //     return compTypeNoSpace;
-  // }
+  }
 
+  _shouldShowMore(showMoreList) {
+    if (showMoreList.length == 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   getDescription(results) {
     results.forEach(function (result) {
@@ -965,12 +1001,13 @@
       //                result['title'] = result['computation-type'] + ' = ' +
       //                        result['value'].toFixed(2) + ', p-value is ' +
       //                        result['pvalue'].toFixed(2);
+      // result['title'] = result['computation-type'] +
+      //     ' between ' +
+      //     result['attribute-one'] + ' and ' +
+      //     result['attribute-two'] + ' is ' +
+      //     result['value'].toFixed(2);
 
-      result['title'] = result['computation-type'] + ' between ' + result['attribute-one'] + ' and ' + result['attribute-two'] + ' is ' + result['value'].toFixed(2); //                result['title'] = result['computation-type'] +
-      //                        ' between ' + result['data-type-one'] + ' ' +
-      //                        result['attribute-one'] + ' and ' +
-      //                        result['data-type-two'] + ' ' +
-      //                        result['attribute-two'];
+      result['title'] = result['computation-type'] + ' (value=' + result['value'] + ')';
     });
   }
 
