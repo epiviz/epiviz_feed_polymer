@@ -340,10 +340,10 @@
             }
         </style>
 
-        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket>
-        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket> -->
+        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket>
 
         <iron-ajax id="randomGeneAjax" auto="" url="http://54.157.53.251/api" params="{&quot;action&quot;: &quot;search&quot;, &quot;q&quot;:&quot;&quot;, &quot;maxResults&quot;: &quot;1&quot;, &quot;datasourceGroup&quot;: &quot;epiviz&quot;, &quot;requestId&quot;: 2}" handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">
         </iron-ajax>
@@ -716,7 +716,7 @@
         box_element.setAttribute('class', "computation-chart");
 
         this._configChart(box_element, iconElement, chartsContainer, result);
-      } else if (result['computation-type'] == 'per gene t-test') {
+      } else if (result['computation-type'] == 'Binomial test difference in proportions') {
         var barplot = document.createElement('epiviz-barplot'); // the order of dims matter!
 
         var dims = ['value', 'type'];
@@ -1007,7 +1007,11 @@
       //     result['attribute-two'] + ' is ' +
       //     result['value'].toFixed(2);
 
-      result['title'] = result['computation-type'] + ' (value=' + result['value'] + ')';
+      if (result['gene'] != undefined) {
+        result['title'] = result['computation-type'] + ' for gene ' + result['gene'] + ' (statistic=' + result['value'] + ')';
+      } else {
+        result['title'] = result['computation-type'] + ' (statistic=' + result['value'] + ')';
+      }
     });
   }
 
