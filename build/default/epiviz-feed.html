@@ -340,10 +340,10 @@
             }
         </style>
 
-        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket> -->
-        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket>
+        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket> -->
 
         <iron-ajax id="randomGeneAjax" auto="" url="http://54.157.53.251/api" params="{&quot;action&quot;: &quot;search&quot;, &quot;q&quot;:&quot;&quot;, &quot;maxResults&quot;: &quot;1&quot;, &quot;datasourceGroup&quot;: &quot;epiviz&quot;, &quot;requestId&quot;: 2}" handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">
         </iron-ajax>
