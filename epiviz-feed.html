@@ -14,6 +14,9 @@
 <link rel="import" href="bower_components/epiviz-charts/chart-grid-behavior.html">
 <link rel="import" href="bower_components/epiviz-charts/chart-draggable-behavior.html">
 
+<!-- Bar Plot dependency-->
+<link rel="import" href="epiviz-barplot.html">
+
 <!-- Polymer Behavior dependency -->
 <link rel="import" href="bower_components/iron-fit-behavior/iron-fit-behavior.html">
 
@@ -333,10 +336,10 @@
             }
         </style>
 
-        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket> -->
-        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket>
+        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket> -->
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api" params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
             handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">

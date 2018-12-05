@@ -14,12 +14,8 @@
 <link rel="import" href="bower_components/epiviz-charts/chart-grid-behavior.html">
 <link rel="import" href="bower_components/epiviz-charts/chart-draggable-behavior.html">
 
-<!-- Chart elements dependency -->
-<link rel="import" href="bower_components/epiviz-charts/epiviz-genes-track.html">
-<link rel="import" href="bower_components/epiviz-charts/epiviz-ideogram-track.html">
-<link rel="import" href="bower_components/epiviz-charts/epiviz-json-box-plot.html">
 <!-- Bar Plot dependency-->
-<link rel="import" href="demo/index.html">
+<link rel="import" href="epiviz-barplot.html">
 
 <!-- Polymer Behavior dependency -->
 <link rel="import" href="bower_components/iron-fit-behavior/iron-fit-behavior.html">
@@ -573,8 +569,17 @@
   }
 
   RandomGeneResponse(e) {
-    var resp = e.detail.response;
-    this.gene = resp.data[0].gene;
+    var resp = e.detail.response; // for debugging purposes
+
+    this.gene = "ESR1";
+    this.chr = "chr10";
+    this.start = 5242780;
+    this.end = 5834495; // this.end = 5352780;
+
+    this.range = this.getGenomicRange(this.chr, this.start, this.end);
+
+    this._rangeChanged(this.chr, this.start, this.end); // this.gene = resp.data[0].gene;
+
   }
 
   _rangeChanged(chr, start, end) {
@@ -677,12 +682,12 @@
     } // methylation charts should be customized.
 
 
-    if (result['data-type-one'] == 'methylation' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'methylation' || result['data-type-one'] == 'expression diff' && result['data-type-two'] == 'methylation diff' || result['data-type-one'] == 'methylation diff' && result['data-type-two'] == 'expression diff') {
+    if (result['data-type-one'] == 'signal' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'signal' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'expression') {
       // var dims = [result['data-type-one'] + '_' +
       //     result['attribute-one'],
       // result['data-type-two'] + '_'
       // + result['attribute-two']];
-      var dims = [result['attribute-one'], result['attribute-two']];
+      var dims = [result['attribute-two'], result['attribute-one']];
       var data = result['data'];
 
       var elementId = this._generateId();
@@ -694,7 +699,7 @@
 
       this._configChart(customScatterPlot, iconElement, chartsContainer, result);
     } // two block data, add a block overlapping track
-    else if (result['data-type-one'] == 'block' && result['data-type-two'] == 'block') {
+    else if (result['data-type-one'] == 'peaks' && result['data-type-two'] == 'peaks') {
         test_measure[0]['type'] = 'range';
         test_measure[1]['type'] = 'range';
         test_measure[0]['metadata'] = null;
@@ -704,7 +709,7 @@
         block_element.setAttribute('class', "computation-chart");
 
         this._configChart(block_element, iconElement, chartsContainer, result);
-      } else if (result['data-type-one'] == 'block' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'block') {
+      } else if (result['data-type-one'] == 'peaks' && result['data-type-two'] == 'expression' || result['data-type-one'] == 'expression' && result['data-type-two'] == 'peaks') {
         // t-test between block and expression, use boxplot
         var data = result['data'];
 
@@ -732,7 +737,8 @@
 
         this._configBarPlot(barplot, iconElement, chartsContainer, result);
       } else {
-        var element = document.createElement('epiviz-scatter-plot');
+        // NOTE: change to line tracks for now, will change back to scatterplot soon
+        var element = document.createElement('epiviz-line-track');
         element.setAttribute('measurements', JSON.stringify(test_measure));
         element.setAttribute('class', "computation-chart");
 
@@ -992,6 +998,16 @@
     } else {
       return false;
     }
+  } // overwrites functions in epiviz-navigation
+
+
+  _selectGene(e) {
+    var selected = e.model.item;
+    this.chr = selected.chr;
+    this.start = selected.start - Math.round(selected.start * 0.01);
+    this.end = selected.end + Math.round(selected.end * 0.01);
+    this.gene = selected.gene;
+    this.range = this.getGenomicRange(this.chr, this.start, this.end);
   }
 
   getDescription(results) {
