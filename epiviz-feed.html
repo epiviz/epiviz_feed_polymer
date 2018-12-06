@@ -17,6 +17,9 @@
 <!-- Bar Plot dependency-->
 <link rel="import" href="epiviz-barplot.html">
 
+<!-- Chart elements dependency -->
+<link rel="import" href="bower_components/epiviz-charts/epiviz-json-box-plot.html">
+
 <!-- Polymer Behavior dependency -->
 <link rel="import" href="bower_components/iron-fit-behavior/iron-fit-behavior.html">
 
@@ -336,10 +339,10 @@
             }
         </style>
 
-        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket>
-        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket> -->
+        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket>
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api" params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
             handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">
@@ -749,6 +752,7 @@
                         JSON.stringify(data));
                     box_element.setAttribute('class',
                         "computation-chart");
+                    box_element.setAttribute('chart-settings', JSON.stringify({"title":"t-test (statistic=0.71)","marginTop":15,"marginBottom":30,"marginLeft":30,"marginRight":15,"measurementGroupsAggregator":"mean-stdev","circleRadiusRatio":0.015,"rowLabel":"name","xMin":"default","xMax":"default","yMin":"default","yMax":100}));
 
                     this._configChart(box_element, iconElement, chartsContainer, result);
 
