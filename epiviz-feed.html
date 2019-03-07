@@ -340,10 +340,10 @@
             }
         </style>
 
-        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket>
-        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
         </web-socket> -->
+        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket>
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api" params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
             handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">
@@ -392,6 +392,20 @@
                             </div>
                         </div>
                         <div id="chartsDiv" class="content chartContainer">
+                            <!-- <epiviz-genes-track slot="charts" measurements='[{
+                                    "id": "genes",
+                                    "name": "genes",
+                                    "type": "range",
+                                    "datasourceId": "genes",
+                                    "datasourceGroup": "genes",
+                                    "dataprovider": "umd",
+                                    "formula": null,
+                                    "defaultChartType": "Genes Track",
+                                    "annotation": null,
+                                    "minValue": null,
+                                    "maxValue": null,
+                                    "metadata": ["gene", "exon_starts", "exon_ends"]
+                                }]'></epiviz-genes-track> -->
                             <slot id="chartNav" name="charts"></slot>
                         </div>
                     </iron-collapse>
@@ -405,7 +419,8 @@
                                     <iron-icon icon="icons:trending-up"></iron-icon>
                                     Feed Results
                                     <paper-dropdown-menu class="group-dropdown-menu" label="GroupBy">
-                                        <paper-listbox slot="dropdown-content" selected="{{groupByMethod}}" attr-for-selected="label" on-selected-changed="groupByChanged">
+                                        <paper-listbox slot="dropdown-content" selected="{{groupByMethod}}"
+                                            attr-for-selected="label" on-selected-changed="groupByChanged">
                                             <paper-item label="Computation">Computation
                                             </paper-item>
                                             <!--<paper-item label="Tissue Type">Tissue-->
@@ -418,8 +433,9 @@
                                         </paper-listbox>
                                     </paper-dropdown-menu>
                                 </h2>
-                                <paper-search-panel search="{{searchString}}" count="5" items="{{results}}" hide-filter-button="True" on-search="searchQuery"
-                                    no-results-text="" on-search-changed="searchQuery">
+                                <paper-search-panel search="{{searchString}}" count="5" items="{{results}}"
+                                    hide-filter-button="True" on-search="searchQuery" no-results-text=""
+                                    on-search-changed="searchQuery">
                                 </paper-search-panel>
                             </div>
                             <div id="feed-results">
@@ -427,7 +443,8 @@
 
                                 </paper-spinner-lite>
                                 <template is="dom-repeat" items="{{filteredResultsByType}}">
-                                    <paper-button id="trigger-[[_sanitizeId(item.type)]]" class="trigger show-hide-button" on-click="groupToggle" aria-expanded$="[[opened]]">
+                                    <paper-button id="trigger-[[_sanitizeId(item.type)]]" class="trigger show-hide-button"
+                                        on-click="groupToggle" aria-expanded$="[[opened]]">
                                         <iron-icon icon="icons:menu"></iron-icon>
                                         [[item.type]]
                                     </paper-button>
@@ -438,7 +455,11 @@
                                                     <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
                                                     </iron-icon>
 
-                                                    <h3>The [[feedItem.computation-type]] between
+                                                    <h3>The [[feedItem.computation-type]]
+                                                        <template is="dom-if" if="{{_showGeneText(feedItem.computation-type)}}">
+                                                            in Gene <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.gene]]</a>
+                                                        </template>
+                                                        between
                                                         <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
                                                         and
                                                         <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
@@ -456,7 +477,11 @@
                                                         <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
                                                         </iron-icon>
 
-                                                        <h3>The [[feedItem.computation-type]] between
+                                                        <h3>The [[feedItem.computation-type]]
+                                                            <template is="dom-if" if="{{_showGeneText(feedItem.computation-type)}}">
+                                                                in Gene <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.gene]]</a>
+                                                            </template>
+                                                            between
                                                             <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
                                                             and
                                                             <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
@@ -469,8 +494,8 @@
                                                 </template>
                                             </iron-collapse>
 
-                                            <paper-button id="showMore-button-[[_sanitizeId(item.type)]]" class="trigger show-more-button" on-click="toggleShowMore"
-                                                aria-expanded$="false" hidden$="[[_shouldShowMore(item.showMore)]]">
+                                            <paper-button id="showMore-button-[[_sanitizeId(item.type)]]" class="trigger show-more-button"
+                                                on-click="toggleShowMore" aria-expanded$="false" hidden$="[[_shouldShowMore(item.showMore)]]">
                                                 Show More ...
                                             </paper-button>
                                         </div>
@@ -577,6 +602,10 @@
                 // return ['_rangeChanged(chr, start, end)'];
             }
 
+            _showGeneText(type) {
+                return type.indexOf("Binomial") != -1;
+            }
+
             RandomGeneResponse(e) {
                 var resp = e.detail.response;
                 this.gene = resp.data[0].gene;
@@ -659,7 +688,8 @@
 
             attributeTapped(e) {
                 console.log(e.srcElement.text);
-                this.searchString = e.srcElement.text;
+                this.set('searchString', e.srcElement.text);
+                this.searchQuery();
             }
 
             itemTapped(e) {
@@ -885,6 +915,10 @@
                             result['data-type-one'].includes(query) ||
                             result['data-type-two'].includes(query) ||
                             result['value'].toString().includes(query)) {
+                            return result;
+                        }
+
+                        if (result['gene'] !== undefined && result['gene'].includes(query)) {
                             return result;
                         }
                     });
