@@ -19,7 +19,8 @@
 <link rel="import" href="bower_components/epiviz-charts/epiviz-ideogram-track.html">
 <link rel="import" href="bower_components/epiviz-charts/epiviz-json-box-plot.html">
 <!-- Bar Plot dependency-->
-<link rel="import" href="demo/index.html">
+<!-- <link rel="import" href="demo/index.html"> -->
+<link rel="import" href="epiviz-barplot.html">
 
 <!-- Polymer Behavior dependency -->
 <link rel="import" href="bower_components/iron-fit-behavior/iron-fit-behavior.html">
@@ -790,6 +791,11 @@
 
         var settings = JSON.parse(JSON.stringify(newChartElement.chart._customSettingsValues));
         settings.title = result['title'];
+
+        if (newChartElement.nodeName == "EPIVIZ-JSON-BOX-PLOT") {
+          settings.marginBottom = 60;
+        }
+
         var domElem = chartsContainer.querySelector('[plot-id$="' + result['plot-id'] + '"]');
         domElem.setAttribute("chart-settings", JSON.stringify(settings));
         setTimeout(function () {
