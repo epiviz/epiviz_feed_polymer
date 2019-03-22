@@ -831,6 +831,9 @@
                 var settings =
                     JSON.parse(JSON.stringify(newChartElement.chart._customSettingsValues));
                 settings.title = result['title'];
+                if (newChartElement.nodeName == "EPIVIZ-JSON-BOX-PLOT") {
+                    settings.marginBottom = 60;
+                }
                 var domElem =
                     chartsContainer.querySelector('[plot-id$="' +
                         result['plot-id'] +
