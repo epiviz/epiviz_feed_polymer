@@ -341,12 +341,14 @@
             }
         </style>
 
-        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket> -->
-        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
+            on-message="handleResponse">
         </web-socket>
+        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
+        </web-socket> -->
 
-        <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api" params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
+        <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api"
+            params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
             handle-as="json" on-response="RandomGeneResponse" debounce-duration="300">
         </iron-ajax>
 
@@ -363,7 +365,8 @@
                     <epiviz-add-chart id="addChart"></epiviz-add-chart>
                 </div>
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
-                    <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked"></paper-icon-button>
+                    <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
+                    </paper-icon-button>
 
                 </paper-menu-button>
             </app-header>
@@ -378,7 +381,8 @@
                                 <iron-label style="font-size: 12pt;">
                                     Enter Gene Symbol:
                                 </iron-label>
-                                <paper-dropdown-input id="geneSearch" label="Search Gene/Probe" on-search-value-changed="_searchGene">
+                                <paper-dropdown-input id="geneSearch" label="Search Gene/Probe"
+                                    on-search-value-changed="_searchGene">
                                     <template>
                                         <dom-repeat items="[[items]]" as="item">
                                             <template>
@@ -393,7 +397,8 @@
                             </div>
                         </div>
                         <div id="chartsDiv" class="content chartContainer">
-                            <!-- <epiviz-genes-track slot="charts" measurements='[{
+                            <slot id="chartNav" name="charts">
+                                <!-- <epiviz-genes-track slot="charts" measurements='[{
                                     "id": "genes",
                                     "name": "genes",
                                     "type": "range",
@@ -407,7 +412,7 @@
                                     "maxValue": null,
                                     "metadata": ["gene", "exon_starts", "exon_ends"]
                                 }]'></epiviz-genes-track> -->
-                            <slot id="chartNav" name="charts"></slot>
+                            </slot>
                         </div>
                     </iron-collapse>
                 </div>
@@ -444,8 +449,9 @@
 
                                 </paper-spinner-lite>
                                 <template is="dom-repeat" items="{{filteredResultsByType}}">
-                                    <paper-button id="trigger-[[_sanitizeId(item.type)]]" class="trigger show-hide-button"
-                                        on-click="groupToggle" aria-expanded$="[[opened]]">
+                                    <paper-button id="trigger-[[_sanitizeId(item.type)]]"
+                                        class="trigger show-hide-button" on-click="groupToggle"
+                                        aria-expanded$="[[opened]]">
                                         <iron-icon icon="icons:menu"></iron-icon>
                                         [[item.type]]
                                     </paper-button>
@@ -453,17 +459,22 @@
                                         <div class="grouped-list">
                                             <template is="dom-repeat" items="{{item.showList}}" as="feedItem">
                                                 <paper-card>
-                                                    <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
+                                                    <iron-icon on-tap="itemTapped" class="click-to-add"
+                                                        icon="image:add-to-photos">
                                                     </iron-icon>
 
                                                     <h3>The [[feedItem.computation-type]]
-                                                        <template is="dom-if" if="{{_showGeneText(feedItem.computation-type)}}">
-                                                            in Gene <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.gene]]</a>
+                                                        <template is="dom-if"
+                                                            if="{{_showGeneText(feedItem.computation-type)}}">
+                                                            in Gene <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.gene]]</a>
                                                         </template>
                                                         between
-                                                        <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                        <a class="hover-over-attribute"
+                                                            on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
                                                         and
-                                                        <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                        <a class="hover-over-attribute"
+                                                            on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
                                                         is
                                                         <b>[[feedItem.value]]</b> (p-value =
                                                         <i>[[feedItem.pvalue]])</i>.
@@ -475,17 +486,22 @@
                                             <iron-collapse id="showMore-[[_sanitizeId(item.type)]]">
                                                 <template is="dom-repeat" items="{{item.showMore}}" as="feedItem">
                                                     <paper-card>
-                                                        <iron-icon on-tap="itemTapped" class="click-to-add" icon="image:add-to-photos">
+                                                        <iron-icon on-tap="itemTapped" class="click-to-add"
+                                                            icon="image:add-to-photos">
                                                         </iron-icon>
 
                                                         <h3>The [[feedItem.computation-type]]
-                                                            <template is="dom-if" if="{{_showGeneText(feedItem.computation-type)}}">
-                                                                in Gene <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.gene]]</a>
+                                                            <template is="dom-if"
+                                                                if="{{_showGeneText(feedItem.computation-type)}}">
+                                                                in Gene <a class="hover-over-attribute"
+                                                                    on-tap="attributeTapped">[[feedItem.gene]]</a>
                                                             </template>
                                                             between
-                                                            <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                            <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
                                                             and
-                                                            <a class="hover-over-attribute" on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                            <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
                                                             is
                                                             <b>[[feedItem.value]]</b> (p-value =
                                                             <i>[[feedItem.pvalue]])</i>.
@@ -495,8 +511,9 @@
                                                 </template>
                                             </iron-collapse>
 
-                                            <paper-button id="showMore-button-[[_sanitizeId(item.type)]]" class="trigger show-more-button"
-                                                on-click="toggleShowMore" aria-expanded$="false" hidden$="[[_shouldShowMore(item.showMore)]]">
+                                            <paper-button id="showMore-button-[[_sanitizeId(item.type)]]"
+                                                class="trigger show-more-button" on-click="toggleShowMore"
+                                                aria-expanded$="false" hidden$="[[_shouldShowMore(item.showMore)]]">
                                                 Show More ...
                                             </paper-button>
                                         </div>
@@ -594,6 +611,30 @@
                     feedItemElement.setAttribute("id", "");
                     console.log("event listener!");
                 });
+
+                var self = this;
+
+                setTimeout(function () {
+                    var genesTrack = document.createElement("epiviz-genes-track");
+                    genesTrack.slot = "charts";
+                    genesTrack.setAttribute("measurements", JSON.stringify([{
+                        "id": "genes",
+                        "name": "genes",
+                        "type": "range",
+                        "datasourceId": "genes",
+                        "datasourceGroup": "genes",
+                        "dataprovider": "umd",
+                        "formula": null,
+                        "defaultChartType": "Genes Track",
+                        "annotation": null,
+                        "minValue": null,
+                        "maxValue": null,
+                        "metadata": ["gene", "exon_starts", "exon_ends"]
+                    }]));
+
+                    self.appendChild(genesTrack);
+                }, 1000);
+
 
                 this.$.addChart._parentContainer = this;
             }
