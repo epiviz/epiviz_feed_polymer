@@ -453,7 +453,7 @@
                                         class="trigger show-hide-button" on-click="groupToggle"
                                         aria-expanded$="[[opened]]">
                                         <iron-icon icon="icons:menu"></iron-icon>
-                                        [[item.type]]
+                                        [[item.type]] ([[_getItemsLength(item)]])
                                     </paper-button>
                                     <iron-collapse id="collapse-[[_sanitizeId(item.type)]]" opened="opened">
                                         <div class="grouped-list">
@@ -495,6 +495,9 @@
                                                                 if="{{_showGeneText(feedItem.computation-type)}}">
                                                                 in Gene <a class="hover-over-attribute"
                                                                     on-tap="attributeTapped">[[feedItem.gene]]</a>
+                                                                <a class="hover-over-attribute" target="_blank">
+                                                                    <iron-icon></iron-icon>
+                                                                </a>
                                                             </template>
                                                             between
                                                             <a class="hover-over-attribute"
@@ -646,6 +649,10 @@
 
             _showGeneText(type) {
                 return type.indexOf("Binomial") != -1;
+            }
+
+            _getItemsLength(item) {
+                return item.showList.length + item.showMore.length;
             }
 
             RandomGeneResponse(e) {
