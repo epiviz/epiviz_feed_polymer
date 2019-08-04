@@ -341,11 +341,12 @@
             }
         </style>
 
-        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
+        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
+            on-message="handleResponse">
+        </web-socket> -->
+        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen"
             on-message="handleResponse">
         </web-socket>
-        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket> -->
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api"
             params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
@@ -467,8 +468,8 @@
                                     </paper-dropdown-menu>
                                 </h2>
                                 <paper-search-panel search="{{searchString}}" count="5" items="{{results}}"
-                                    hide-filter-button="True" on-search="searchQuery" no-results-text=""
-                                    on-search-changed="searchQuery">
+                                    hide-filter-button="True" no-results-text="" on-search-changed="searchQueryChanged"
+                                    on-search="searchQuery" on-search-clear="searchQueryClear">
                                 </paper-search-panel>
                             </div>
                             <div id="feed-results">
@@ -1027,6 +1028,16 @@
                     this.filteredResultsByType =
                         this._toTypeArray(this.filteredResults);
                 }
+            }
+
+            // on-search-changed handler
+            searchQueryChanged() {
+                this.searchQuery();
+            }
+
+            // on-search-clear
+            searchQueryClear() {
+                this.searchQuery();
             }
 
             groupByChanged(e) {
