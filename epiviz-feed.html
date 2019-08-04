@@ -364,12 +364,39 @@
                 <div style="display:inline" hidden$="{{collapsed}}">
                     <epiviz-add-chart id="addChart"></epiviz-add-chart>
                 </div>
+
+                <paper-icon-button alt="Intro screen" on-tap="_openIntro" icon="icons:info">Info</paper-icon-button>
+
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
                     <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
                     </paper-icon-button>
 
                 </paper-menu-button>
             </app-header>
+
+            <paper-dialog id="intro">
+                <h2 style="text-align:center; color: #4285f4">UMD Epiviz2 Browser</h2>
+                <div class="tab-container">
+                    The data for this instance of the Epiviz Feed comes from various sources.
+                    <ul>
+                        <li>Annotation data from the UCSC genome browser for hg19</li>
+                        <li>DNA methylation data and hypomethylation block regions were obtained from Hansen et al
+                            (<a href="//doi-org.proxy-um.researchport.umd.edu/10.1038/ng.865" ref="aid_type=doi"
+                                target="_blank">10.1038/ng.865</a>)</li>
+                        <li>Affymetrix hgu133plus2 expression data were obtained from the Gene Expression Barcode
+                            project</li>
+                        <li>Illumina HumanMethylation450 BeadChip data: IDAT files for 17 normal colon and 34 colon
+                            tumor samples were obtained from the TCGA project. All processing was performed using the
+                            minfi Bioconductor package</li>
+                        <li>Raw count tables at the exon level were obtained for 3 normal colon and 37 colon tumor
+                            samples from the TCGA project17. Counts were normalized for library size using the DESeq
+                            method.</li>
+                    </ul>
+                </div>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Close</paper-button>
+                </div>
+            </paper-dialog>
             <app-drawer-layout id="feed-drawer-layout">
 
                 <div class="content">
@@ -468,6 +495,10 @@
                                                             if="{{_showGeneText(feedItem.computation-type)}}">
                                                             in Gene <a class="hover-over-attribute"
                                                                 on-tap="attributeTapped">[[feedItem.gene]]</a>
+                                                            <a target="_blank" href=[[_getGeneCardLink(feedItem.gene)]]>
+                                                                <iron-icon style="width:15px" icon="icons:info-outline">
+                                                                </iron-icon>
+                                                            </a>
                                                         </template>
                                                         between
                                                         <a class="hover-over-attribute"
@@ -495,8 +526,11 @@
                                                                 if="{{_showGeneText(feedItem.computation-type)}}">
                                                                 in Gene <a class="hover-over-attribute"
                                                                     on-tap="attributeTapped">[[feedItem.gene]]</a>
-                                                                <a class="hover-over-attribute" target="_blank">
-                                                                    <iron-icon></iron-icon>
+                                                                <a target="_blank"
+                                                                    href=[[_getGeneCardLink(feedItem.gene)]]>
+                                                                    <iron-icon style="width:15px"
+                                                                        icon="icons:info-outline">
+                                                                    </iron-icon>
                                                                 </a>
                                                             </template>
                                                             between
@@ -655,6 +689,10 @@
                 return item.showList.length + item.showMore.length;
             }
 
+            _getGeneCardLink(gene) {
+                return "https://www.genecards.org/cgi-bin/carddisp.pl?gene=" + gene;
+            }
+
             RandomGeneResponse(e) {
                 var resp = e.detail.response;
                 this.gene = resp.data[0].gene;
@@ -708,6 +746,10 @@
                 super.ready();
                 this.notMethy = true;
 
+            }
+
+            _openIntro() {
+                this.$.intro.open();
             }
 
             handleResponse(event) {
