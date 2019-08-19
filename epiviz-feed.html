@@ -355,7 +355,7 @@
         <app-header-layout fullbleed>
 
             <app-header id="header" class="paper-header" slot="header" fixed>
-                <iron-label>EPIVIZ COMPUTE || Gene :
+                <iron-label>EPIVIZ COMPUTE | Gene :
                     <a target="_blank" href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=[[gene]]">[[gene]]</a>
                 </iron-label>
                 <a href="http://epiviz.github.io" target="_blank" hidden$={{noLogo}}>
@@ -364,9 +364,22 @@
                 <div style="display:inline" hidden$="{{collapsed}}">
                     <epiviz-add-chart id="addChart"></epiviz-add-chart>
                 </div>
-
+                <!-- <div style="display:inline">
                 <paper-icon-button alt="Intro screen" on-tap="_openIntro" icon="icons:info">Info</paper-icon-button>
+                    <iron-icon on-tap="itemDownloadTapped" class="click-to-download" icon="icons:cloud-download">
+                    </iron-icon>
+                </div> -->
+                <!-- <paper-menu-button dynamic-align vertical-align="bottom"> -->
+                <paper-icon-button id="infopop" icon="icons:info" on-click="_openIntro">
+                </paper-icon-button>
+                <paper-tooltip for="infopop">Info on datasets</paper-tooltip>
 
+                <!-- </paper-menu-button>
+                <paper-menu-button dynamic-align vertical-align="bottom"> -->
+                <paper-icon-button id="download" icon="icons:cloud-download" on-click="itemDownloadTapped">
+                </paper-icon-button>
+                <paper-tooltip for="download">Download Results</paper-tooltip>
+                <!-- </paper-menu-button> -->
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
                     <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
                     </paper-icon-button>
@@ -754,7 +767,9 @@
                         start: this.start,
                         end: this.end,
                         chr: this.chr,
-                        gene: this.gene
+                        gene: this.gene,
+                        significant: this.significant,
+                        totalTests: this.totalTests
                     };
 
                     // increase the counter to deal with multiple requests
@@ -791,7 +806,11 @@
 
             handleResponse(event) {
                 var data = JSON.parse(event.detail);
-                if (data == this.seqID) {
+                if ("seq" in data && data.seq == this.seqID) {
+                    this.set("significant", data.significant);
+                    this.set("totalTests", data.totalTests);
+                    // this.notifyPath('significant');
+                    // this.notifyPath('totalTests');
                     // this.webSocketReady = false;
                     // this.$.requestResults.close();
                     return;
