@@ -465,6 +465,13 @@
                                             </paper-item>
                                         </paper-listbox>
                                     </paper-dropdown-menu>
+
+                                    <iron-icon id="tsr" icon="image:brightness-2"></iron-icon>
+                                    <paper-tooltip for="tsr">Total Significant Results</paper-tooltip>
+                                    [[_getTotalSignificant(significant.*)]]
+                                    <iron-icon id="tst" icon="image:brightness-1"></iron-icon>
+                                    <paper-tooltip for="tst">Total Statistical Tests</paper-tooltip>
+                                    [[_getTotalTests(totalTests.*)]]
                                 </h2>
                                 <paper-search-panel search="{{searchString}}" count="5" items="{{results}}"
                                     hide-filter-button="True" on-search="searchQuery" no-results-text=""
@@ -480,7 +487,7 @@
                                         class="trigger show-hide-button" on-click="groupToggle"
                                         aria-expanded$="[[opened]]">
                                         <iron-icon icon="icons:menu"></iron-icon>
-                                        [[item.type]] ([[_getItemsLength(item)]])
+                                        [[item.type]] ([[_getItemsLength(item)]] / [[_getTotalItemsLength(item)]])
                                     </paper-button>
                                     <iron-collapse id="collapse-[[_sanitizeId(item.type)]]" opened="opened">
                                         <div class="grouped-list">
@@ -625,9 +632,23 @@
                         type: Number,
                         value: 0
                     },
+                    significant: {
+                        type: Number,
+                        value: 0,
+                        notify: true
+                    },
                     webSocketReady: {
                         type: Boolean,
                         value: false
+                    },
+                    saveFeedItems: {
+                        type: Array,
+                        value: []
+                    },
+                    totalTests: {
+                        type: Number,
+                        value: 1,
+                        notify: true
                     }
                 }
             }
@@ -681,12 +702,28 @@
                 // return ['_rangeChanged(chr, start, end)'];
             }
 
+            _getLength(results) {
+                return this.results.length;
+            }
+
+            _getTotalTests(r) {
+                return this.totalTests - 1;
+            }
+
+            _getTotalSignificant(s) {
+                return this.significant;
+            }
+
             _showGeneText(type) {
                 return type.indexOf("Binomial") != -1;
             }
 
             _getItemsLength(item) {
                 return item.showList.length + item.showMore.length;
+            }
+
+            _getTotalItemsLength(item) {
+                return this.tempGroupedResults[item.type].length;
             }
 
             _getGeneCardLink(gene) {
