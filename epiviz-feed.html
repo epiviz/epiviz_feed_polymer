@@ -38,7 +38,7 @@
 <link rel="import" href="bower_components/epiviz-data-source/epiviz-data-source.html">
 <link rel="import" href="bower_components/epiviz-charts/epiviz-charts.html">
 <link rel="import" href="bower_components/promise-polyfill/promise-polyfill-lite.html">
-<link rel="import" href="bower_components/paper-search/paper-search-panel.html">
+<link rel="import" href="./paper-search-panel.html">
 <link rel="import" href="bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="bower_components/paper-item/paper-item.html">
@@ -350,11 +350,12 @@
             }
         </style>
 
-        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
+        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
+            on-message="handleResponse">
+        </web-socket> -->
+        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen"
             on-message="handleResponse">
         </web-socket>
-        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen" on-message="handleResponse">
-        </web-socket> -->
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api"
             params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
@@ -496,8 +497,8 @@
                                     [[_getTotalTests(totalTests.*)]]
                                 </h2>
                                 <paper-search-panel search="{{searchString}}" count="5" items="{{results}}"
-                                    hide-filter-button="True" on-search="searchQuery" no-results-text=""
-                                    on-search-changed="searchQuery">
+                                    hide-filter-button="True" no-results-text="" on-search-changed="searchQueryChanged"
+                                    on-search="searchQuery" on-search-clear="searchQueryClear">
                                 </paper-search-panel>
                             </div>
                             <div id="feed-results">
@@ -1118,6 +1119,16 @@
                     this.filteredResultsByType =
                         this._toTypeArray(this.filteredResults);
                 }
+            }
+
+            // on-search-changed handler
+            searchQueryChanged() {
+                this.searchQuery();
+            }
+
+            // on-search-clear
+            searchQueryClear() {
+                this.searchQuery();
             }
 
             groupByChanged(e) {
