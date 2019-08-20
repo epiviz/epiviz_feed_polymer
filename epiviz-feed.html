@@ -776,7 +776,7 @@
             }
 
             _getExponential(value) {
-                return value.toExponential();
+                return Number(value).toExponential(2);
             }
 
             RandomGeneResponse(e) {
