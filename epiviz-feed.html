@@ -241,7 +241,7 @@
             }
 
             .header-bar-height {
-                height: 50px;
+                height: 70px;
             }
 
             paper-search-panel {
@@ -308,7 +308,7 @@
             }
 
             #header {
-                height: 50px;
+                height: 60px;
                 /* linear-gradient(white, #e0e2e2) */
             }
 
@@ -386,12 +386,15 @@
                 </paper-icon-button>
                 <paper-tooltip for="infopop">Info on datasets</paper-tooltip>
 
-                <!-- </paper-menu-button>
-                <paper-menu-button dynamic-align vertical-align="bottom"> -->
-                <paper-icon-button id="download" icon="icons:cloud-download" on-click="itemDownloadTapped">
-                </paper-icon-button>
-                <paper-tooltip for="download">Download Results</paper-tooltip>
-                <!-- </paper-menu-button> -->
+                <paper-dropdown-menu class="dropdown-menu" label="Download results">
+                    <paper-listbox slot="dropdown-content" selected="{{downloadMethod}}" attr-for-selected="label"
+                        on-selected-changed="downloadChanged">
+                        <paper-item label="downloadGene">Download significant results for [[gene]]
+                        </paper-item>
+                        <paper-item label="downloadSelection">Download user selected results
+                        </paper-item>
+                    </paper-listbox>
+                </paper-dropdown-menu>
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
                     <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
                     </paper-icon-button>
@@ -400,7 +403,7 @@
             </app-header>
 
             <paper-dialog id="intro">
-                <h2 style="text-align:center; color: #4285f4">UMD Epiviz2 Browser</h2>
+                <h2 style="text-align:center; color: #4285f4">UMD Epiviz Feed Application</h2>
                 <div class="tab-container">
                     The data for this instance of the Epiviz Feed comes from various sources.
                     <ul>
@@ -409,14 +412,22 @@
                             (<a href="//doi-org.proxy-um.researchport.umd.edu/10.1038/ng.865" ref="aid_type=doi"
                                 target="_blank">10.1038/ng.865</a>)</li>
                         <li>Affymetrix hgu133plus2 expression data were obtained from the Gene Expression Barcode
-                            project</li>
+                            project(<a href="//dx.doi.org/10.1093%2Fnar%2Fgkt1204" ref="aid_type=doi"
+                                target="_blank">10.1093/nar/gkt1204</a>)</li>
                         <li>Illumina HumanMethylation450 BeadChip data: IDAT files for 17 normal colon and 34 colon
                             tumor samples were obtained from the TCGA project. All processing was performed using the
-                            minfi Bioconductor package</li>
+                            minfi Bioconductor package(<a
+                                href="https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga"
+                                target="_blank">TCGA</a>)</li>
                         <li>Raw count tables at the exon level were obtained for 3 normal colon and 37 colon tumor
                             samples from the TCGA project17. Counts were normalized for library size using the DESeq
                             method.</li>
                     </ul>
+
+                    The source code is open source and is available on GitHub (<a
+                        href="https://github.com/epiviz/epiviz-feed-computation" target="_blank">Computation
+                        Server</a>, <a href="https://github.com/epiviz/epiviz_feed_polymer" target="_blank">Feed
+                        Application</a> )
                 </div>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
@@ -633,6 +644,10 @@
                         value: "Computation",
                         notify: true
                     },
+                    downloadMethod: {
+                        type: String,
+                        notify: true
+                    },
                     searchString: {
                         type: String
                     },
@@ -764,6 +779,40 @@
                 this.gene = resp.data[0].gene;
             }
 
+            downloadChanged(e) {
+                this.downloadMethod = e.detail.value;
+                var self = this;
+                if (this.downloadMethod && this.results) {
+
+                    var text = "";
+                    var downloadItems;
+
+                    if (this.downloadMethod == "downloadGene") {
+                        downloadItems = this.results;
+                    }
+                    else if (this.downloadMethod == "downloadSelection") {
+                        downloadItems = this.saveFeedItems;
+                    }
+
+                    text += "Gene\tStatistical_test\tValue\tFDR_Correction\tPvalue\tDescription\r\n";
+
+                    if (downloadItems.length > 0) {
+
+                        downloadItems.forEach(function (item) {
+                            text += self.gene + "\t" + item["computation-type"] + "\t" +
+                                item.value + "\t" + item["adjusted_testing_levels"] + "\t" +
+                                item.pvalue + item.description + "\r\n";
+                        });
+
+                        var link = document.createElement("a");
+                        link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                        link.setAttribute("download", "epiviz-feed-" + new Date().getTime() + ".txt");
+                        document.body.appendChild(link);
+                        link.click();
+                    }
+                }
+            }
+
             _rangeChanged(chr, start, end) {
                 if (this.chr == undefined || this.start == undefined || this.end == undefined) {
                     return;
@@ -822,7 +871,7 @@
 
             handleResponse(event) {
                 var data = JSON.parse(event.detail);
-                if ("seq" in data && data.seq == this.seqID) {
+                if (!Array.isArray(data)) {
                     this.set("significant", data.significant);
                     this.set("totalTests", data.totalTests);
                     // this.notifyPath('significant');
@@ -862,24 +911,10 @@
 
             itemSaveTapped(e) {
                 var iconElement = e.currentTarget;
-                this.saveFeedItems = this.saveFeedItems.concat(e.model.feedItem.description);
+                this.saveFeedItems = this.saveFeedItems.concat(e.model.feedItem);
                 iconElement.setAttribute("icon", "icons:bookmark");
                 iconElement.setAttribute("style", "color: #3284FF");
                 // this.clicked(e.model.feedItem, iconElement);
-            }
-
-            itemDownloadTapped(e) {
-                var self = this;
-                var text = "";
-                this.saveFeedItems.forEach(function (item) {
-                    text += self.gene + " : " + item + "\r\n";
-                });
-
-                var link = document.createElement("a");
-                link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-                link.setAttribute("download", "epiviz-feed-" + new Date().getTime() + ".txt");
-                document.body.appendChild(link);
-                link.click();
             }
 
             clicked(result, iconElement) {
