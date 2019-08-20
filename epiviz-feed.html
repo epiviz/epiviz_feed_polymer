@@ -551,7 +551,7 @@
                                                             on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
                                                         is
                                                         <b>[[feedItem.value]]</b> (p-value =
-                                                        <i>[[feedItem.pvalue]])</i>.
+                                                        <i>[[_getExponential(feedItem.pvalue)]])</i>.
                                                     </h3>
                                                     <iron-icon on-tap="itemSaveTapped" class="click-to-save"
                                                         icon="icons:bookmark-border">
@@ -586,7 +586,7 @@
                                                                 on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
                                                             is
                                                             <b>[[feedItem.value]]</b> (p-value =
-                                                            <i>[[feedItem.pvalue]])</i>.
+                                                            <i>[[_getExponential(feedItem.pvalue)]])</i>.
                                                         </h3>
                                                         <iron-icon on-tap="itemSaveTapped" class="click-to-save"
                                                             icon="icons:bookmark-border">
@@ -715,6 +715,7 @@
                 });
 
                 var self = this;
+                self.firstLoad = true;
 
                 setTimeout(function () {
                     var genesTrack = document.createElement("epiviz-genes-track");
@@ -772,6 +773,10 @@
 
             _getGeneCardLink(gene) {
                 return "https://www.genecards.org/cgi-bin/carddisp.pl?gene=" + gene;
+            }
+
+            _getExponential(value) {
+                return value.toExponential();
             }
 
             RandomGeneResponse(e) {
@@ -856,7 +861,10 @@
 
             socketOpen() {
                 this.webSocketReady = true;
-                this._rangeChanged();
+                if (this.firstLoad) {
+                    this._rangeChanged();
+                    this.firstLoad = false;
+                }
             }
 
             ready() {
