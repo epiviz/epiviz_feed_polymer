@@ -137,8 +137,8 @@
                 /*right: 0;*/
                 text-align: initial;
                 background: #e6ecf0;
-                margin-top: 48px;
-                height: calc(100% - 48px);
+                margin-top: 45px;
+                height: calc(100% - 45px);
             }
 
             .pane.feed-pane {
@@ -308,7 +308,7 @@
             }
 
             #header {
-                height: 60px;
+                height: 50px;
                 /* linear-gradient(white, #e0e2e2) */
             }
 
@@ -350,6 +350,12 @@
                 grid-column: span 6;
                 order: 2;
             }
+
+            /* .fill-feed {
+                margin-top: 20px;
+                width: 160px;
+                display: inline;
+            } */
         </style>
 
         <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
@@ -357,6 +363,9 @@
         </web-socket> -->
         <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen"
             on-message="handleResponse">
+        </web-socket>
+
+        <web-socket id="requestInfo" url="ws://localhost:5001/getInfo" on-message="handleInfoResponse">
         </web-socket>
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api"
@@ -367,61 +376,47 @@
         <app-header-layout fullbleed>
 
             <app-header id="header" class="paper-header" slot="header" fixed>
-                <iron-label>EPIVIZ COMPUTE | Gene :
+                <iron-label>EPIVIZ FEED | Gene :
                     <a target="_blank" href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=[[gene]]">[[gene]]</a>
                 </iron-label>
-                <a href="http://epiviz.github.io" target="_blank" hidden$={{noLogo}}>
-                    <!-- <img id="logo" src="epiviz_4_logo_medium.png" alt="Epiviz" width="100" height="21"> -->
-                </a>
+                <a href="http://epiviz.github.io" target="_blank" hidden$={{noLogo}}></a>
                 <div style="display:inline" hidden$="{{collapsed}}">
                     <epiviz-add-chart id="addChart"></epiviz-add-chart>
                 </div>
-                <!-- <div style="display:inline">
-                <paper-icon-button alt="Intro screen" on-tap="_openIntro" icon="icons:info">Info</paper-icon-button>
-                    <iron-icon on-tap="itemDownloadTapped" class="click-to-download" icon="icons:cloud-download">
-                    </iron-icon>
-                </div> -->
-                <!-- <paper-menu-button dynamic-align vertical-align="bottom"> -->
-                <paper-icon-button id="infopop" icon="icons:info" on-click="_openIntro">
-                </paper-icon-button>
-                <paper-tooltip for="infopop">Info on datasets</paper-tooltip>
 
-                <paper-dropdown-menu class="dropdown-menu" label="Download results">
-                    <paper-listbox slot="dropdown-content" selected="{{downloadMethod}}" attr-for-selected="label"
-                        on-selected-changed="downloadChanged">
-                        <paper-item label="downloadGene">Download significant results for [[gene]]
-                        </paper-item>
-                        <paper-item label="downloadSelection">Download user selected results
-                        </paper-item>
-                    </paper-listbox>
-                </paper-dropdown-menu>
+                <paper-menu-button id="infopop" dynamic-align vertical-align="bottom" vertical-offset=24>
+                    <paper-icon-button icon="icons:info" slot="dropdown-trigger" on-click="_openIntro">
+                    </paper-icon-button>
+                </paper-menu-button>
+                <paper-tooltip for="infopop">Info on datasets</paper-tooltip>
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
                     <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
                     </paper-icon-button>
-
                 </paper-menu-button>
             </app-header>
 
             <paper-dialog id="intro">
                 <h2 style="text-align:center; color: #4285f4">UMD Epiviz Feed Application</h2>
+                <hr />
                 <div class="tab-container">
                     The data for this instance of the Epiviz Feed comes from various sources.
                     <ul>
-                        <li>Annotation data from the UCSC genome browser for hg19</li>
-                        <li>DNA methylation data and hypomethylation block regions were obtained from Hansen et al
-                            (<a href="//doi-org.proxy-um.researchport.umd.edu/10.1038/ng.865" ref="aid_type=doi"
-                                target="_blank">10.1038/ng.865</a>)</li>
-                        <li>Affymetrix hgu133plus2 expression data were obtained from the Gene Expression Barcode
-                            project(<a href="//dx.doi.org/10.1093%2Fnar%2Fgkt1204" ref="aid_type=doi"
-                                target="_blank">10.1093/nar/gkt1204</a>)</li>
-                        <li>Illumina HumanMethylation450 BeadChip data: IDAT files for 17 normal colon and 34 colon
-                            tumor samples were obtained from the TCGA project. All processing was performed using the
-                            minfi Bioconductor package(<a
-                                href="https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga"
-                                target="_blank">TCGA</a>)</li>
-                        <li>Raw count tables at the exon level were obtained for 3 normal colon and 37 colon tumor
-                            samples from the TCGA project17. Counts were normalized for library size using the DESeq
-                            method.</li>
+                        <dom-repeat items="[[infoDescription.sources]]" as="item">
+                            <template>
+                                <li>[[item]]</li>
+                            </template>
+                        </dom-repeat>
+                    </ul>
+
+                    The following data measurements were used in this instance
+                    <ul>
+                        <dom-repeat items="[[_getInfoList(infoDescription.groups)]]" as="item">
+                            <template>
+                                <li>
+                                    [[item]] - [[_getInfoListText(item)]]
+                                </li>
+                            </template>
+                        </dom-repeat>
                     </ul>
 
                     The source code is open source and is available on GitHub (<a
@@ -429,6 +424,7 @@
                         Server</a>, <a href="https://github.com/epiviz/epiviz_feed_polymer" target="_blank">Feed
                         Application</a> )
                 </div>
+                <hr />
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
                 </div>
@@ -461,20 +457,6 @@
                         </div>
                         <div id="chartsDiv" class="content chartContainer">
                             <slot id="chartNav" name="charts">
-                                <!-- <epiviz-genes-track slot="charts" measurements='[{
-                                    "id": "genes",
-                                    "name": "genes",
-                                    "type": "range",
-                                    "datasourceId": "genes",
-                                    "datasourceGroup": "genes",
-                                    "dataprovider": "umd",
-                                    "formula": null,
-                                    "defaultChartType": "Genes Track",
-                                    "annotation": null,
-                                    "minValue": null,
-                                    "maxValue": null,
-                                    "metadata": ["gene", "exon_starts", "exon_ends"]
-                                }]'></epiviz-genes-track> -->
                             </slot>
                         </div>
                     </iron-collapse>
@@ -487,20 +469,25 @@
                                 <h2>
                                     <iron-icon icon="icons:trending-up"></iron-icon>
                                     Feed Results
-                                    <paper-dropdown-menu class="group-dropdown-menu" label="GroupBy">
+                                    <!-- <paper-dropdown-menu class="group-dropdown-menu" label="GroupBy">
                                         <paper-listbox slot="dropdown-content" selected="{{groupByMethod}}"
                                             attr-for-selected="label" on-selected-changed="groupByChanged">
                                             <paper-item label="Computation">Computation
                                             </paper-item>
-                                            <!--<paper-item label="Tissue Type">Tissue-->
-                                            <!--Type-->
-                                            <!--</paper-item>-->
-                                            <!-- <paper-item label="Computation Type">Computation Type
-                                            </paper-item> -->
                                             <paper-item label="Data Type">Data Type
                                             </paper-item>
                                         </paper-listbox>
+                                    </paper-dropdown-menu> -->
+                                    <paper-dropdown-menu class="group-dropdown-menu" label="Download results">
+                                        <paper-listbox slot="dropdown-content" selected="{{downloadMethod}}"
+                                            attr-for-selected="label" on-selected-changed="downloadChanged">
+                                            <paper-item label="downloadGene">Download significant results for [[gene]]
+                                            </paper-item>
+                                            <paper-item label="downloadSelection">Download user selected results
+                                            </paper-item>
+                                        </paper-listbox>
                                     </paper-dropdown-menu>
+                                    <!-- <div class="fill-feed"></div> -->
 
                                     <iron-icon id="tsr" icon="image:brightness-2"></iron-icon>
                                     <paper-tooltip for="tsr">Total Significant Results</paper-tooltip>
@@ -525,6 +512,8 @@
                                         <iron-icon icon="icons:menu"></iron-icon>
                                         [[item.type]] ([[_getItemsLength(item)]] / [[_getTotalItemsLength(item)]])
                                     </paper-button>
+                                    <paper-tooltip for="trigger-[[_sanitizeId(item.type)]]">
+                                        [[_getGroupDescription(item.type)]]</paper-tooltip>
                                     <iron-collapse id="collapse-[[_sanitizeId(item.type)]]" opened="opened">
                                         <div class="grouped-list">
                                             <template is="dom-repeat" items="{{item.showList}}" as="feedItem">
@@ -693,6 +682,23 @@
                         type: Number,
                         value: 1,
                         notify: true
+                    },
+                    infoDescription: {
+                        type: Object,
+                        notify: true
+                    },
+                    computeDescriptions: {
+                        type: Object,
+                        value: {
+                            "overlap-block-block": "Overlap of regions of differential methylation",
+                            "correlation-expression-methylation": "Correlation between gene expression and probe level methylation across tissues",
+                            "Binomial test difference in proportions-expression-expression": "Binomial test difference of gene expression in proportions per gene within the region",
+                            "correlation-expression-methylation diff": "Correlation between differential gene expression and methylation across tissues",
+                            "correlation-methylation diff-methylation diff": "Correlation between methylation difference across tissues",
+                            "correlation-methylation-methylation": "Correlation between probe level methylation difference across tissues",
+                            "correlation-expression-expression": "Correlation between gene expression across tissues",
+                            "t-test-expression-block": "T-test between differential expression and differential methylation within the same tissue type"
+                        }
                     }
                 }
             }
@@ -707,8 +713,7 @@
                     var plotId = e.detail.id;
                     var iconId = "icon-" + plotId;
                     var feedItemElement = this.querySelector('epiviz-feed').shadowRoot.getElementById(iconId);
-                    feedItemElement.setAttribute("icon",
-                        "image:add-to-photos");
+                    feedItemElement.setAttribute("icon", "image:add-to-photos");
                     feedItemElement.setAttribute("style", "");
                     feedItemElement.setAttribute("id", "");
                     console.log("event listener!");
@@ -716,6 +721,9 @@
 
                 var self = this;
                 self.firstLoad = true;
+
+                self.$.requestInfo.open();
+                self.$.requestInfo.send("getInfo");
 
                 setTimeout(function () {
                     var genesTrack = document.createElement("epiviz-genes-track");
@@ -742,9 +750,17 @@
                 this.$.addChart._parentContainer = this;
             }
 
-            static get observers() {
-                return [];
-                // return ['_rangeChanged(chr, start, end)'];
+            // static get observers() {
+            //     return [];
+            //     // return ['_rangeChanged(chr, start, end)'];
+            // }
+
+            _getInfoList(item) {
+                return Object.keys(item);
+            }
+
+            _getInfoListText(item) {
+                return this.infoDescription["groups"][item].join(", ");
             }
 
             _getLength(results) {
@@ -777,6 +793,10 @@
 
             _getExponential(value) {
                 return Number(value).toExponential(2);
+            }
+
+            _getGroupDescription(item) {
+                return this.computeDescriptions[item];
             }
 
             RandomGeneResponse(e) {
@@ -875,6 +895,11 @@
 
             _openIntro() {
                 this.$.intro.open();
+            }
+
+            handleInfoResponse(event) {
+                var data = JSON.parse(event.detail);
+                this.set("infoDescription", data);
             }
 
             handleResponse(event) {
@@ -1222,13 +1247,9 @@
 
                         var final_results = {}
                         for (var key in groupedResults) {
+                            final_results[key] = []
                             for (var i = 0; i < groupedResults[key].length; i++) {
                                 if (groupedResults[key][i].significance == true) {
-
-                                    if (!(key in final_results)) {
-                                        final_results[key] = []
-                                    }
-
                                     final_results[key].push(groupedResults[key][i])
                                 }
                             }
@@ -1315,8 +1336,7 @@
                     != undefined && Object.keys(resultsByType).length >
                     0) {
                     return Object.keys(resultsByType).map(function (key) {
-                        if (resultsByType[key] == undefined
-                            || resultsByType[key].length == 0) {
+                        if (resultsByType[key] == undefined) {
                             return;
                         }
 
