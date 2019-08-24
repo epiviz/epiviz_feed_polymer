@@ -351,6 +351,15 @@
                 order: 2;
             }
 
+            paper-tooltip {
+                --paper-tooltip-background: #919191;
+                --paper-tooltip-delay-in: 200;
+
+                --paper-tooltip: {
+                    font-size: 16px;
+                }
+            }
+
             /* .fill-feed {
                 margin-top: 20px;
                 width: 160px;
@@ -388,7 +397,7 @@
                     <paper-icon-button icon="icons:info" slot="dropdown-trigger" on-click="_openIntro">
                     </paper-icon-button>
                 </paper-menu-button>
-                <paper-tooltip for="infopop">Info on datasets</paper-tooltip>
+                <paper-tooltip for="infopop" fit-to-visible-bounds="true">Info on datasets</paper-tooltip>
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
                     <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
                     </paper-icon-button>
@@ -512,7 +521,8 @@
                                         <iron-icon icon="icons:menu"></iron-icon>
                                         [[item.type]] ([[_getItemsLength(item)]] / [[_getTotalItemsLength(item)]])
                                     </paper-button>
-                                    <paper-tooltip for="trigger-[[_sanitizeId(item.type)]]">
+                                    <paper-tooltip for="trigger-[[_sanitizeId(item.type)]]"
+                                        fit-to-visible-bounds="true">
                                         [[_getGroupDescription(item.type)]]</paper-tooltip>
                                     <iron-collapse id="collapse-[[_sanitizeId(item.type)]]" opened="opened">
                                         <div class="grouped-list">
