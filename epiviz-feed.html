@@ -367,15 +367,18 @@
             } */
         </style>
 
-        <!-- <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
+        <web-socket id="requestResults" url="ws://54.157.53.251:5001/getdata" on-open="socketOpen"
             on-message="handleResponse">
-        </web-socket> -->
-        <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen"
+        </web-socket>
+
+        <web-socket id="requestInfo" url="ws://54.157.53.251:5001/getInfo" on-message="handleInfoResponse">
+        </web-socket>
+        <!-- <web-socket id="requestResults" url="ws://localhost:5001/getdata" on-open="socketOpen"
             on-message="handleResponse">
         </web-socket>
 
         <web-socket id="requestInfo" url="ws://localhost:5001/getInfo" on-message="handleInfoResponse">
-        </web-socket>
+        </web-socket> -->
 
         <iron-ajax id="randomGeneAjax" auto url="http://54.157.53.251/api"
             params='{"action": "search", "q":"", "maxResults": "1", "datasourceGroup": "epiviz", "requestId": 2}'
@@ -397,7 +400,7 @@
                     <paper-icon-button icon="icons:info" slot="dropdown-trigger" on-click="_openIntro">
                     </paper-icon-button>
                 </paper-menu-button>
-                <paper-tooltip for="infopop" fit-to-visible-bounds="true">Info on datasets</paper-tooltip>
+                <paper-tooltip for="infopop">Info on datasets</paper-tooltip>
                 <paper-menu-button dynamic-align vertical-align="bottom" vertical-offset=24>
                     <paper-icon-button src="icons/feed_icon.png" slot="dropdown-trigger" on-click="drawerToggleClicked">
                     </paper-icon-button>
@@ -542,12 +545,24 @@
                                                                 </iron-icon>
                                                             </a>
                                                         </template>
-                                                        between
-                                                        <a class="hover-over-attribute"
-                                                            on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
-                                                        and
-                                                        <a class="hover-over-attribute"
-                                                            on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                        <template is="dom-if"
+                                                            if="{{_showTtestText(feedItem.computation-type)}}">
+                                                            for differences in
+                                                            <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                            inside/outside
+                                                            <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                        </template>
+                                                        <template is="dom-if"
+                                                            if="{{!_showTtestText(feedItem.computation-type)}}">
+                                                            between
+                                                            <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.attribute-one]]</a>
+                                                            and
+                                                            <a class="hover-over-attribute"
+                                                                on-tap="attributeTapped">[[feedItem.attribute-two]]</a>
+                                                        </template>
                                                         is
                                                         <b>[[feedItem.value]]</b> (p-value =
                                                         <i>[[_getExponential(feedItem.pvalue)]])</i>.
@@ -787,6 +802,10 @@
 
             _showGeneText(type) {
                 return type.indexOf("Binomial") != -1;
+            }
+
+            _showTtestText(type) {
+                return type.indexOf("t-test") != -1;
             }
 
             _getItemsLength(item) {
@@ -1411,21 +1430,23 @@
             getDescription(results) {
                 results.forEach(function (result) {
                     // get description
-                    result['description'] = result['computation-type'] +
-                        ' between ' + result['data-type-one'] + ' ' +
-                        result['attribute-one'] + ' and ' +
-                        result['data-type-two'] + ' ' +
-                        result['attribute-two'] + ' is ' +
-                        result['value'].toFixed(2) + '.';
-                    // get title
-                    //                result['title'] = result['computation-type'] + ' = ' +
-                    //                        result['value'].toFixed(2) + ', p-value is ' +
-                    //                        result['pvalue'].toFixed(2);
-                    // result['title'] = result['computation-type'] +
-                    //     ' between ' +
-                    //     result['attribute-one'] + ' and ' +
-                    //     result['attribute-two'] + ' is ' +
-                    //     result['value'].toFixed(2);
+                    if (result['computation-type'].includes("t-test")) {
+                        result['description'] = result['computation-type'] +
+                            ' for differences in ' + result['data-type-one'] + ' ' +
+                            result['attribute-one'] + ' inside/outside ' +
+                            result['data-type-two'] + ' ' +
+                            result['attribute-two'] + ' is ' +
+                            result['value'].toFixed(2) + '.';
+                    }
+                    else {
+                        result['description'] = result['computation-type'] +
+                            ' between ' + result['data-type-one'] + ' ' +
+                            result['attribute-one'] + ' and ' +
+                            result['data-type-two'] + ' ' +
+                            result['attribute-two'] + ' is ' +
+                            result['value'].toFixed(2) + '.';
+                    }
+
                     if (result['gene'] != undefined) {
                         result['title'] = result['computation-type'] + ' for gene ' + result['gene'] + ' (statistic=' + result['value'] + ')';
                     } else {
